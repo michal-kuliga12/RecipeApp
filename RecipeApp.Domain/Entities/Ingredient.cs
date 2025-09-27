@@ -1,10 +1,12 @@
-﻿namespace Entities;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Entities;
 
 public class Ingredient
 {
-    public int ID { get; set; }
-    public string Name { get; set; }            // np. "mąka"
-    public double Quantity { get; set; }        // np. 200
-    public string Unit { get; set; }            // np. "g", "ml", "łyżka"
-    public int RecipeId { get; set; }           // klucz obcy -> Recipe
+    [Key]
+    public Guid ID { get; set; }
+    [Required(ErrorMessage = "Nazwa produktu jest wymagana")]
+    [Range(2, 50)]
+    public string? Name { get; set; }
 }

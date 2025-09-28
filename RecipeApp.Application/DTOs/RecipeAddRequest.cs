@@ -16,17 +16,15 @@ public class RecipeAddRequest
     [StringLength(100, ErrorMessage = "Autor nie może być dłuższy niż 50 znaków")]
     public string? Author { get; set; }
     [Required(ErrorMessage = "Kategoria głowna jest wymagana")]
-    [StringLength(50, ErrorMessage = "Kategoria głowna nie może być dłuższa niż 50 znaków")]
     public PrimaryCategory PrimaryCategory { get; set; }
 
     [Required(ErrorMessage = "Typ dania jest wymagany")]
-    [StringLength(50, ErrorMessage = "Typ dania nie może być dłuższy niż 50 znaków")]
     public DishType DishType { get; set; }
     public int PreparationTime { get; set; }
     [Required(ErrorMessage = "Przepis musi zawierać co najmniej jeden składnik")]
     public List<RecipeIngredient>? RecipeIngredients { get; set; }
     [Range(1, 20, ErrorMessage = "Liczba porcji musi być w zakresie od 1 do 20")]
-    public int Servings { get; set; }
+    public int Servings { get; set; } = 1;
     [Range(0.0, 5.0, ErrorMessage = "Ocena musi być w zakresie od 0 do 5")]
     public double Rating { get; set; }
     [Url(ErrorMessage = "Niepoprawny adres URL obrazu")]
@@ -35,7 +33,7 @@ public class RecipeAddRequest
     [DataType(DataType.DateTime)]
     public DateTime CreatedAt { get; set; }
 
-    Recipe ToRecipe()
+    public Recipe ToRecipe()
         => new Recipe()
         {
             Name = Name,

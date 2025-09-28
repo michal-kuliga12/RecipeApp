@@ -59,7 +59,7 @@ public class RecipeServiceTests
                 {
                     ID = Guid.NewGuid(),
                     RecipeID = Guid.NewGuid(), // tymczasowe, w rzeczywistości przypisane po dodaniu przepisu
-                    IngredientID = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"), // Makaron spaghetti
+                    IngredientID = Guid.NewGuid(), // Makaron spaghetti
                     Quantity = 400,
                     Unit = Unit.Gram
                 },
@@ -83,18 +83,9 @@ public class RecipeServiceTests
             PrimaryCategory = PrimaryCategory.MainCourse,
             DishType = DishType.MainDish,
             CreatedAt = DateTime.UtcNow,
-            RecipeIngredients = new List<RecipeIngredient>()
-            {
-                new RecipeIngredient
-                {
-                    ID = Guid.NewGuid(),
-                    RecipeID = Guid.NewGuid(), // tymczasowe, w rzeczywistości przypisane po dodaniu przepisu
-                    IngredientID = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"), // Makaron spaghetti
-                    Quantity = 400,
-                    Unit = Unit.Gram
-                },
-            }
+            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } }
         };
+
 
         RecipeResponse recipeResponseFromAdd = _recipeService.AddRecipe(recipeRequestToAdd);
         List<RecipeResponse> recipesFromGetAll = _recipeService.GetAllRecipes();
@@ -106,10 +97,115 @@ public class RecipeServiceTests
     #endregion
 
     #region GetRecipeByID()
+    [Fact]
+    public void GetRecipeByID_NullID()
+    {
+        Guid? invalidRecipeID = null;
+        RecipeResponse? recipeFromGetByID = _recipeService.GetRecipeByID(invalidRecipeID);
+
+        Assert.Null(recipeFromGetByID);
+    }
+
+    [Fact]
+    public void GetRecipeByID_ValidID_RecipeNotFound()
+    {
+        Guid? invalidRecipeID = Guid.NewGuid();
+        RecipeResponse? recipeFromGetByID = _recipeService.GetRecipeByID(invalidRecipeID);
+
+        Assert.Null(recipeFromGetByID);
+    }
+
+    [Fact]
+    public void GetRecipeByID_ValidID_RecipeFound()
+    {
+        RecipeAddRequest recipeRequestToAdd = new RecipeAddRequest
+        {
+            Name = "Spaghetti Bolognese",
+            Author = "Jan Kowalski",
+            PrimaryCategory = PrimaryCategory.MainCourse,
+            DishType = DishType.MainDish,
+            CreatedAt = DateTime.UtcNow,
+            RecipeIngredients = new List<RecipeIngredient>()
+            {
+                new RecipeIngredient
+                {
+                    ID = Guid.NewGuid(),
+                    RecipeID = Guid.NewGuid(), // tymczasowe, w rzeczywistości przypisane po dodaniu przepisu
+                    IngredientID = Guid.NewGuid(), // Makaron spaghetti
+                    Quantity = 400,
+                    Unit = Unit.Gram
+                },
+            }
+        };
+        RecipeResponse recipeResponseFromAdd = _recipeService.AddRecipe(recipeRequestToAdd);
+        Guid? validRecipeID = recipeResponseFromAdd.ID;
+
+        RecipeResponse? recipeFromGetByID = _recipeService.GetRecipeByID(validRecipeID);
+
+        Assert.NotNull(recipeFromGetByID);
+        Assert.Equal(recipeFromGetByID.ID, validRecipeID);
+    }
 
     #endregion
     #region GetAllRecipes()
+    [Fact]
+    public void GetAllRecipes_EmptyList()
+    {
+        List<RecipeResponse> recipesFromGetAll = _recipeService.GetAllRecipes();
 
+        Assert.Empty(recipesFromGetAll);
+    }
+    [Fact]
+    public void GetAllRecipes_AddMultipleRecipes_ShouldContainThemAll()
+    {
+        RecipeAddRequest recipeRequestToAdd1 = new RecipeAddRequest
+        {
+            Name = "Spaghetti Bolognese",
+            Author = "Jan Kowalski",
+            PrimaryCategory = PrimaryCategory.MainCourse,
+            DishType = DishType.MainDish,
+            CreatedAt = DateTime.UtcNow,
+            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } }
+        };
+        RecipeAddRequest recipeRequestToAdd2 = new RecipeAddRequest
+        {
+            Name = "Spaghetti Bolognese",
+            Author = "Jan Kowalski",
+            PrimaryCategory = PrimaryCategory.MainCourse,
+            DishType = DishType.MainDish,
+            CreatedAt = DateTime.UtcNow,
+            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } }
+        };
+        RecipeAddRequest recipeRequestToAdd3 = new RecipeAddRequest
+        {
+            Name = "Spaghetti Bolognese",
+            Author = "Jan Kowalski",
+            PrimaryCategory = PrimaryCategory.MainCourse,
+            DishType = DishType.MainDish,
+            CreatedAt = DateTime.UtcNow,
+            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } }
+        };
 
+        List<RecipeAddRequest> recipeRequestToAdd_List = new() { recipeRequestToAdd1, recipeRequestToAdd2, recipeRequestToAdd3 };
+        List<RecipeResponse> recipeResponseFromAdd_List = new();
+
+        var recipesToAdd = new List<RecipeAddRequest> { recipeRequestToAdd1, recipeRequestToAdd2, recipeRequestToAdd3 };
+        var addedRecipes = new List<RecipeResponse>();
+
+        // Dodanie przepisów do serwisu
+        foreach (var recipeRequest in recipesToAdd)
+        {
+            addedRecipes.Add(_recipeService.AddRecipe(recipeRequest));
+        }
+
+        // Pobranie wszystkich przepisów
+        var allRecipes = _recipeService.GetAllRecipes();
+
+        // Sprawdzenie, czy wszystkie dodane przepisy znajdują się w kolekcji
+        foreach (var addedRecipe in addedRecipes)
+        {
+            Assert.Contains(allRecipes, r => r.ID == addedRecipe.ID);
+        }
+    }
     #endregion
 }

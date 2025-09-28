@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RecipeApp.Web\RecipeApp.Web.csproj" />
   </ItemGroup>
 
 </Project>

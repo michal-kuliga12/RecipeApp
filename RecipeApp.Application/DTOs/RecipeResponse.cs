@@ -19,11 +19,23 @@ public class RecipeResponse
     public double Rating { get; set; }
     public string? ImageUrl { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    // Dodaje nadpisywanie metody Equals aby sprawdzać kiedy obiekty są sobie równe
+    public override bool Equals(object? obj)
+    {
+        if (obj is not RecipeResponse other) return false;
+        return ID == other.ID; // albo wszystkie pola, które mają się liczyć
+    }
+
+    public override int GetHashCode()
+    {
+        return ID.GetHashCode();
+    }
 }
 
 public static class RecipeExtensions
 {
-    public static RecipeResponse RecipeToRecipeResponse(this Recipe recipe)
+    public static RecipeResponse ToRecipeResponse(this Recipe recipe)
         => new RecipeResponse()
         {
             ID = recipe.ID,
@@ -38,3 +50,5 @@ public static class RecipeExtensions
             CreatedAt = recipe.CreatedAt,
         };
 }
+
+

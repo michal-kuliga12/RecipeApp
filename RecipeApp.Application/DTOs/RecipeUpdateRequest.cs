@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using RecipeApp.Domain.Entities;
+using RecipeApp.Domain.Enums;
 
 namespace RecipeApp.Application.DTOs;
 
@@ -13,9 +14,15 @@ public class RecipeUpdateRequest
     [Required(ErrorMessage = "Autor jest wymagany")]
     [StringLength(100, ErrorMessage = "Autor nie może być dłuższy niż 50 znaków")]
     public string? Author { get; set; }
+    [Required(ErrorMessage = "Kategoria głowna jest wymagana")]
+    [StringLength(50, ErrorMessage = "Kategoria głowna nie może być dłuższa niż 50 znaków")]
+    public PrimaryCategory PrimaryCategory { get; set; }
+
+    [Required(ErrorMessage = "Typ dania jest wymagany")]
+    [StringLength(50, ErrorMessage = "Typ dania nie może być dłuższy niż 50 znaków")]
+    public DishType DishType { get; set; }
     [Required(ErrorMessage = "Kategoria jest wymagana")]
     [StringLength(50, ErrorMessage = "Kategoria nie może być dłuższa niż 50 znaków")]
-    public string? Category { get; set; }
     public int PreparationTime { get; set; }
     [Required(ErrorMessage = "Przepis musi zawierać co najmniej jeden składnik")]
     public List<RecipeIngredient>? RecipeIngredients { get; set; }

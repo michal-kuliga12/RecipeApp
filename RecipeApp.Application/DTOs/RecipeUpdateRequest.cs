@@ -1,10 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Entities;
 using RecipeApp.Domain.Entities;
 
 namespace RecipeApp.Application.DTOs;
 
-public class RecipeAddRequest
+public class RecipeUpdateRequest
 {
     [Required(ErrorMessage = "Nazwa przepisu jest wymagana")]
     [StringLength(50, MinimumLength = 3, ErrorMessage = "Nazwa musi mieć od 3 do 50 znaków")]
@@ -28,21 +27,4 @@ public class RecipeAddRequest
     public string? ImageUrl { get; set; }
     [DataType(DataType.DateTime)]
     public DateTime CreatedAt { get; set; }
-
-    Recipe ToRecipe()
-        => new Recipe()
-        {
-            Name = Name,
-            Description = Description,
-            Author = Author,
-            Category = Category,
-            PreparationTime = PreparationTime,
-            RecipeIngredients = RecipeIngredients,
-            Servings = Servings,
-            Rating = Rating,
-            ImageUrl = ImageUrl,
-            CreatedAt = CreatedAt
-        };
 }
-
-

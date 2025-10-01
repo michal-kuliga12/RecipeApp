@@ -16,10 +16,8 @@ public class RecipeAddRequest
     [StringLength(100, ErrorMessage = "Autor nie może być dłuższy niż 50 znaków")]
     public string? Author { get; set; }
     [Required(ErrorMessage = "Kategoria głowna jest wymagana")]
-    public PrimaryCategory PrimaryCategory { get; set; }
+    public Category Category { get; set; }
 
-    [Required(ErrorMessage = "Typ dania jest wymagany")]
-    public DishType DishType { get; set; }
     public int PreparationTime { get; set; }
     [Required(ErrorMessage = "Przepis musi zawierać co najmniej jeden składnik")]
     public List<RecipeIngredient>? RecipeIngredients { get; set; }
@@ -39,8 +37,7 @@ public class RecipeAddRequest
             Name = Name,
             Description = Description,
             Author = Author,
-            PrimaryCategory = PrimaryCategory,
-            DishType = DishType,
+            Category = Category,
             PreparationTime = PreparationTime,
             RecipeIngredients = RecipeIngredients,
             Servings = Servings,

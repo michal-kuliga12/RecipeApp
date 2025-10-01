@@ -10,9 +10,8 @@ public class RecipeResponse
     public string? Name { get; set; }
     public string? Description { get; set; }
     public string? Author { get; set; }
-    public PrimaryCategory PrimaryCategory { get; set; }
+    public Category Category { get; set; }
 
-    public DishType DishType { get; set; }
     public int PreparationTime { get; set; }
     public List<RecipeIngredient>? RecipeIngredients { get; set; }
     public int Servings { get; set; }
@@ -42,10 +41,8 @@ public static class RecipeExtensions
             Name = recipe.Name,
             Description = recipe.Description,
             Author = recipe.Author,
-            PrimaryCategory = recipe.PrimaryCategory,
-            DishType = recipe.DishType,
+            Category = recipe.Category,
             PreparationTime = recipe.PreparationTime,
-
             Servings = recipe.Servings,
             CreatedAt = recipe.CreatedAt,
         };

@@ -17,10 +17,8 @@ public class Recipe
     [StringLength(100, ErrorMessage = "Autor nie może być dłuższy niż 50 znaków")]
     public string? Author { get; set; }
     [Required(ErrorMessage = "Kategoria głowna jest wymagana")]
-    public PrimaryCategory PrimaryCategory { get; set; }
+    public Category Category { get; set; }
 
-    [Required(ErrorMessage = "Typ dania jest wymagany")]
-    public DishType DishType { get; set; }
     [Required(ErrorMessage = "Kategoria jest wymagana")]
     [StringLength(50, ErrorMessage = "Kategoria nie może być dłuższa niż 50 znaków")]
     public int PreparationTime { get; set; }

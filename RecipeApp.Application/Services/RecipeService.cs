@@ -96,7 +96,34 @@ public class RecipeService : IRecipeService
     }
     public List<RecipeResponse>? GetSortedRecipes(List<RecipeResponse> recipeList, string sortBy, bool ascending = true)
     {
-        throw new NotImplementedException();
+        if (recipeList == null)
+            throw new ArgumentNullException("Lista przepisów do sortowania nie może być null");
+
+        if (String.IsNullOrEmpty(sortBy))
+            return recipeList;
+
+        List<RecipeResponse> sortedRecipes = (sortBy, ascending) switch
+        {
+            (nameof(RecipeResponse.Name), ascending: true) => recipeList.OrderBy(temp => temp.Name, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Name), ascending: false) => recipeList.OrderByDescending(temp => temp.Name, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Description), ascending: true) => recipeList.OrderBy(temp => temp.Description, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Description), ascending: false) => recipeList.OrderByDescending(temp => temp.Description, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Author), ascending: true) => recipeList.OrderBy(temp => temp.Author, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Author), ascending: false) => recipeList.OrderByDescending(temp => temp.Author, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Category), ascending: true) => recipeList.OrderBy(temp => temp.Category).ToList(),
+            (nameof(RecipeResponse.Category), ascending: false) => recipeList.OrderByDescending(temp => temp.Category).ToList(),
+            (nameof(RecipeResponse.PreparationTime), ascending: true) => recipeList.OrderBy(temp => temp.PreparationTime).ToList(),
+            (nameof(RecipeResponse.PreparationTime), ascending: false) => recipeList.OrderByDescending(temp => temp.PreparationTime).ToList(),
+            (nameof(RecipeResponse.Servings), ascending: true) => recipeList.OrderBy(temp => temp.Servings).ToList(),
+            (nameof(RecipeResponse.Servings), ascending: false) => recipeList.OrderByDescending(temp => temp.Servings).ToList(),
+            (nameof(RecipeResponse.Rating), ascending: true) => recipeList.OrderBy(temp => temp.Rating).ToList(),
+            (nameof(RecipeResponse.Rating), ascending: false) => recipeList.OrderByDescending(temp => temp.Rating).ToList(),
+            (nameof(RecipeResponse.CreatedAt), ascending: true) => recipeList.OrderBy(temp => temp.CreatedAt).ToList(),
+            (nameof(RecipeResponse.CreatedAt), ascending: false) => recipeList.OrderByDescending(temp => temp.CreatedAt).ToList(),
+            _ => recipeList
+        };
+
+        return sortedRecipes;
     }
 
     public List<RecipeResponse> UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest)

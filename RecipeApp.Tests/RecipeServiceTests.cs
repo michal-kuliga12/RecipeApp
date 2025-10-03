@@ -14,6 +14,49 @@ public class RecipeServiceTests
         _recipeService = new RecipeService();
     }
 
+    private void PopulateRecipeList()
+    {
+        _recipeService.AddRecipe(new RecipeAddRequest
+        {
+            Name = "Spaghetti Bolognese",
+            Description = "Klasyczne włoskie danie z makaronem spaghetti i sosem mięsnym.",
+            Author = "Jan Kowalski",
+            Category = Category.MainCourse,
+            PreparationTime = 45,
+            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
+            Servings = 4,
+            Rating = 4.5,
+            ImageUrl = "https://example.com/images/spaghetti.jpg",
+            CreatedAt = DateTime.Now
+        });
+        _recipeService.AddRecipe(new RecipeAddRequest
+        {
+            Name = "Sałatka Cezar",
+            Description = "Lekka i szybka w przygotowaniu sałatka z kurczakiem i parmezanem.",
+            Author = "Anna Nowak",
+            Category = Category.Salads,
+            PreparationTime = 20,
+            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
+            Servings = 2,
+            Rating = 4.0,
+            ImageUrl = "https://example.com/images/cezar.jpg",
+            CreatedAt = DateTime.Now
+        });
+        _recipeService.AddRecipe(new RecipeAddRequest
+        {
+            Name = "Szarlotka",
+            Description = "Tradycyjne polskie ciasto z jabłkami, idealne na deser.",
+            Author = "Piotr Wiśniewski",
+            Category = Category.PastriesAndDesserts,
+            PreparationTime = 90,
+            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
+            Servings = 8,
+            Rating = 5.0,
+            ImageUrl = "https://example.com/images/szarlotka.jpg",
+            CreatedAt = DateTime.Now
+        });
+    }
+
     #region AddRecipe()
     [Fact]
     public void AddRecipe_NullRecipe()
@@ -150,6 +193,7 @@ public class RecipeServiceTests
 
         Assert.Empty(recipesFromGetAll);
     }
+
     [Fact]
     public void GetAllRecipes_AddMultipleRecipes_ShouldContainThemAll()
     {
@@ -204,45 +248,7 @@ public class RecipeServiceTests
     [Fact]
     public void GetFilteredRecipes_ProperSearchValues()
     {
-        _recipeService.AddRecipe(new RecipeAddRequest
-        {
-            Name = "Spaghetti Bolognese",
-            Description = "Klasyczne włoskie danie z makaronem spaghetti i sosem mięsnym.",
-            Author = "Jan Kowalski",
-            Category = Category.MainCourse,
-            PreparationTime = 45,
-            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
-            Servings = 4,
-            Rating = 4.5,
-            ImageUrl = "https://example.com/images/spaghetti.jpg",
-            CreatedAt = DateTime.Now
-        });
-        _recipeService.AddRecipe(new RecipeAddRequest
-        {
-            Name = "Sałatka Cezar",
-            Description = "Lekka i szybka w przygotowaniu sałatka z kurczakiem i parmezanem.",
-            Author = "Anna Nowak",
-            Category = Category.Salads,
-            PreparationTime = 20,
-            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
-            Servings = 2,
-            Rating = 4.0,
-            ImageUrl = "https://example.com/images/cezar.jpg",
-            CreatedAt = DateTime.Now
-        });
-        _recipeService.AddRecipe(new RecipeAddRequest
-        {
-            Name = "Szarlotka",
-            Description = "Tradycyjne polskie ciasto z jabłkami, idealne na deser.",
-            Author = "Piotr Wiśniewski",
-            Category = Category.PastriesAndDesserts,
-            PreparationTime = 90,
-            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
-            Servings = 8,
-            Rating = 5.0,
-            ImageUrl = "https://example.com/images/szarlotka.jpg",
-            CreatedAt = DateTime.Now
-        });
+        PopulateRecipeList();
         List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
         List<RecipeResponse> expectedFilteredRecipes = new List<RecipeResponse>();
 
@@ -266,45 +272,7 @@ public class RecipeServiceTests
     [InlineData("")]
     public void GetFilteredRecipes_NullOrEmptySearchName(string searchString)
     {
-        _recipeService.AddRecipe(new RecipeAddRequest
-        {
-            Name = "Spaghetti Bolognese",
-            Description = "Klasyczne włoskie danie z makaronem spaghetti i sosem mięsnym.",
-            Author = "Jan Kowalski",
-            Category = Category.MainCourse,
-            PreparationTime = 45,
-            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
-            Servings = 4,
-            Rating = 4.5,
-            ImageUrl = "https://example.com/images/spaghetti.jpg",
-            CreatedAt = DateTime.Now
-        });
-        _recipeService.AddRecipe(new RecipeAddRequest
-        {
-            Name = "Sałatka Cezar",
-            Description = "Lekka i szybka w przygotowaniu sałatka z kurczakiem i parmezanem.",
-            Author = "Anna Nowak",
-            Category = Category.Salads,
-            PreparationTime = 20,
-            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
-            Servings = 2,
-            Rating = 4.0,
-            ImageUrl = "https://example.com/images/cezar.jpg",
-            CreatedAt = DateTime.Now
-        });
-        _recipeService.AddRecipe(new RecipeAddRequest
-        {
-            Name = "Szarlotka",
-            Description = "Tradycyjne polskie ciasto z jabłkami, idealne na deser.",
-            Author = "Piotr Wiśniewski",
-            Category = Category.PastriesAndDesserts,
-            PreparationTime = 90,
-            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
-            Servings = 8,
-            Rating = 5.0,
-            ImageUrl = "https://example.com/images/szarlotka.jpg",
-            CreatedAt = DateTime.Now
-        });
+        PopulateRecipeList();
         List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
 
         string? searchBy = nameof(RecipeResponse.Name);
@@ -332,45 +300,7 @@ public class RecipeServiceTests
     [Fact]
     public void GetFilteredRecipes_NoResults()
     {
-        _recipeService.AddRecipe(new RecipeAddRequest
-        {
-            Name = "Spaghetti Bolognese",
-            Description = "Klasyczne włoskie danie z makaronem spaghetti i sosem mięsnym.",
-            Author = "Jan Kowalski",
-            Category = Category.MainCourse,
-            PreparationTime = 45,
-            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
-            Servings = 4,
-            Rating = 4.5,
-            ImageUrl = "https://example.com/images/spaghetti.jpg",
-            CreatedAt = DateTime.Now
-        });
-        _recipeService.AddRecipe(new RecipeAddRequest
-        {
-            Name = "Sałatka Cezar",
-            Description = "Lekka i szybka w przygotowaniu sałatka z kurczakiem i parmezanem.",
-            Author = "Anna Nowak",
-            Category = Category.Salads,
-            PreparationTime = 20,
-            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
-            Servings = 2,
-            Rating = 4.0,
-            ImageUrl = "https://example.com/images/cezar.jpg",
-            CreatedAt = DateTime.Now
-        });
-        _recipeService.AddRecipe(new RecipeAddRequest
-        {
-            Name = "Szarlotka",
-            Description = "Tradycyjne polskie ciasto z jabłkami, idealne na deser.",
-            Author = "Piotr Wiśniewski",
-            Category = Category.PastriesAndDesserts,
-            PreparationTime = 90,
-            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
-            Servings = 8,
-            Rating = 5.0,
-            ImageUrl = "https://example.com/images/szarlotka.jpg",
-            CreatedAt = DateTime.Now
-        });
+        PopulateRecipeList();
         List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
 
         string? searchString = "Paella z kurczakiem";
@@ -378,6 +308,81 @@ public class RecipeServiceTests
         List<RecipeResponse> filteredRecipes = _recipeService.GetFilteredRecipes(searchBy, searchString);
 
         Assert.Empty(filteredRecipes);
+    }
+
+    #endregion
+    #region GetSortedRecipes()
+    [Fact]
+    public void GetSortedRecipes_ReturnAscendingOrder()
+    {
+        PopulateRecipeList();
+        List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
+
+        List<RecipeResponse>? sortedRecipes = _recipeService.GetSortedRecipes(allRecipes, nameof(RecipeResponse.Author), true);
+
+        Assert.Equal("Anna Nowak", sortedRecipes[0].Author);
+        Assert.Equal("Jan Kowalski", sortedRecipes[1].Author);
+        Assert.Equal("Piotr Wiśniewski", sortedRecipes[2].Author);
+    }
+
+    [Fact]
+    public void GetSortedRecipes_ReturnDescendingOrder()
+    {
+        PopulateRecipeList();
+        List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
+
+        List<RecipeResponse>? sortedRecipes = _recipeService.GetSortedRecipes(allRecipes, nameof(RecipeResponse.Author), false);
+
+        Assert.Equal("Anna Nowak", sortedRecipes[2].Author);
+        Assert.Equal("Jan Kowalski", sortedRecipes[1].Author);
+        Assert.Equal("Piotr Wiśniewski", sortedRecipes[0].Author);
+    }
+
+    [Fact]
+    public void GetSortedRecipes_CheckCount()
+    {
+        PopulateRecipeList();
+        List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
+
+        List<RecipeResponse>? sortedRecipes = _recipeService.GetSortedRecipes(allRecipes, nameof(RecipeResponse.Author), false);
+
+        Assert.Equal(sortedRecipes.Count, allRecipes.Count);
+    }
+
+    [Fact]
+    public void GetSortedRecipes_EmptyList_ReturnEmpty()
+    {
+        List<RecipeResponse>? emptyRecipesList = _recipeService.GetSortedRecipes(new List<RecipeResponse>(), nameof(RecipeResponse.Author), false);
+        Assert.Empty(emptyRecipesList);
+    }
+
+    [Fact]
+    public void GetSortedRecipes_SingleElement_ReturnsSameList()
+    {
+        List<RecipeResponse> single = new List<RecipeResponse> { new RecipeResponse { Author = "Test" } };
+
+        List<RecipeResponse>? result = _recipeService.GetSortedRecipes(single, nameof(RecipeResponse.Author), true);
+
+        Assert.Single(result);
+        Assert.Equal("Test", result[0].Author);
+    }
+
+    [Fact]
+    public void GetSortedRecipes_InvalidProperty_ReturnUnsorted()
+    {
+        PopulateRecipeList();
+        List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
+
+        List<RecipeResponse> sortedRecipes = _recipeService.GetSortedRecipes(allRecipes, "abc", false);
+
+        Assert.Equal(allRecipes.Count, sortedRecipes.Count);
+    }
+
+    [Fact]
+    public void GetSortedRecipes_NullList_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            _recipeService.GetSortedRecipes(null, nameof(RecipeResponse.Author), true));
     }
     #endregion
 }

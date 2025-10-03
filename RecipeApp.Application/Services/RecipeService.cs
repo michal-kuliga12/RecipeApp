@@ -44,10 +44,8 @@ public class RecipeService : IRecipeService
 
         return recipeFound.ToRecipeResponse();
     }
-
     public List<RecipeResponse> GetAllRecipes()
-        => _recipes.Select(temp => temp.ToRecipeResponse()).ToList();
-
+    => _recipes.Select(temp => temp.ToRecipeResponse()).ToList();
     public List<RecipeResponse> GetFilteredRecipes(string searchBy, string? searchString)
     {
         List<RecipeResponse> allRecipes = GetAllRecipes();
@@ -59,15 +57,15 @@ public class RecipeService : IRecipeService
         switch (searchBy)
         {
             case nameof(RecipeResponse.Name):
-                filteredRecipes = allRecipes.Where(temp => temp.Name != null
+                filteredRecipes = allRecipes.Where(temp => !String.IsNullOrEmpty(temp.Name)
                     && temp.Name.Contains(searchString, StringComparison.CurrentCultureIgnoreCase)).ToList();
                 break;
             case nameof(RecipeResponse.Description):
-                filteredRecipes = allRecipes.Where(temp => temp.Description != null
+                filteredRecipes = allRecipes.Where(temp => !String.IsNullOrEmpty(temp.Description)
                     && temp.Description.Contains(searchString, StringComparison.CurrentCultureIgnoreCase)).ToList();
                 break;
             case nameof(RecipeResponse.Author):
-                filteredRecipes = allRecipes.Where(temp => temp.Author != null
+                filteredRecipes = allRecipes.Where(temp => !String.IsNullOrEmpty(temp.Author)
                     && temp.Author.Contains(searchString, StringComparison.CurrentCultureIgnoreCase)).ToList();
                 break;
             case nameof(RecipeResponse.Category):
@@ -75,7 +73,7 @@ public class RecipeService : IRecipeService
                     && EnumDisplayHelper.GetDisplayName(temp.Category).Contains(searchString, StringComparison.CurrentCultureIgnoreCase)).ToList();
                 break;
             case nameof(RecipeResponse.PreparationTime):
-                filteredRecipes = allRecipes.Where(temp => temp.PreparationTime != null
+                filteredRecipes = allRecipes.Where(temp => temp.PreparationTime != null && temp.PreparationTime >= 1
                     && temp.PreparationTime.ToString().Equals(searchString)).ToList();
                 break;
             case nameof(RecipeResponse.RecipeIngredients):
@@ -83,7 +81,7 @@ public class RecipeService : IRecipeService
                     && temp.RecipeIngredients.Any(ing => ing.Ingredient.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))).ToList();
                 break;
             case nameof(RecipeResponse.Servings):
-                filteredRecipes = allRecipes.Where(temp => temp.Servings != null
+                filteredRecipes = allRecipes.Where(temp => temp.Servings != null && temp.Servings >= 1
                     && temp.Servings.ToString().Equals(searchString)).ToList();
                 break;
             case nameof(RecipeResponse.Rating):
@@ -96,6 +94,10 @@ public class RecipeService : IRecipeService
         }
         return filteredRecipes;
     }
+    public List<RecipeResponse>? GetSortedRecipes(List<RecipeResponse> recipeList, string sortBy, bool ascending = true)
+    {
+        throw new NotImplementedException();
+    }
 
     public List<RecipeResponse> UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest)
     {
@@ -106,4 +108,6 @@ public class RecipeService : IRecipeService
     {
         throw new NotImplementedException();
     }
+
+
 }

@@ -44,9 +44,9 @@ public class RecipeService : IRecipeService
 
         return recipeFound.ToRecipeResponse();
     }
-    public List<RecipeResponse> GetAllRecipes()
+    public List<RecipeResponse>? GetAllRecipes()
     => _recipes.Select(temp => temp.ToRecipeResponse()).ToList();
-    public List<RecipeResponse> GetFilteredRecipes(string searchBy, string? searchString)
+    public List<RecipeResponse>? GetFilteredRecipes(string searchBy, string? searchString)
     {
         List<RecipeResponse> allRecipes = GetAllRecipes();
         List<RecipeResponse> filteredRecipes = allRecipes;

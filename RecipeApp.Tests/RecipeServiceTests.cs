@@ -14,6 +14,7 @@ public class RecipeServiceTests
         _recipeService = new RecipeService();
     }
 
+    #region HelperMethods
     private void PopulateRecipeList()
     {
         _recipeService.AddRecipe(new RecipeAddRequest
@@ -56,6 +57,23 @@ public class RecipeServiceTests
             CreatedAt = DateTime.Now
         });
     }
+    private RecipeResponse PopulateOneRecipe_ReturnsRecipeResponse()
+    {
+        return _recipeService.AddRecipe(new RecipeAddRequest
+        {
+            Name = "Spaghetti Bolognese",
+            Description = "Klasyczne włoskie danie z makaronem spaghetti i sosem mięsnym.",
+            Author = "Jan Kowalski",
+            Category = Category.MainCourse,
+            PreparationTime = 45,
+            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
+            Servings = 4,
+            Rating = 4.5,
+            ImageUrl = "https://example.com/images/spaghetti.jpg",
+            CreatedAt = DateTime.Now
+        });
+    }
+    #endregion
 
     #region AddRecipe()
     [Fact]
@@ -157,25 +175,7 @@ public class RecipeServiceTests
     [Fact]
     public void GetRecipeByID_ValidID_RecipeFound()
     {
-        RecipeAddRequest recipeRequestToAdd = new RecipeAddRequest
-        {
-            Name = "Spaghetti Bolognese",
-            Author = "Jan Kowalski",
-            Category = Category.MainCourse,
-            CreatedAt = DateTime.UtcNow,
-            RecipeIngredients = new List<RecipeIngredient>()
-            {
-                new RecipeIngredient
-                {
-                    ID = Guid.NewGuid(),
-                    RecipeID = Guid.NewGuid(), // tymczasowe, w rzeczywistości przypisane po dodaniu przepisu
-                    IngredientID = Guid.NewGuid(), // Makaron spaghetti
-                    Quantity = 400,
-                    Unit = Unit.Gram
-                },
-            }
-        };
-        RecipeResponse recipeResponseFromAdd = _recipeService.AddRecipe(recipeRequestToAdd);
+        RecipeResponse recipeResponseFromAdd = PopulateOneRecipe_ReturnsRecipeResponse();
         Guid? validRecipeID = recipeResponseFromAdd.ID;
 
         RecipeResponse? recipeFromGetByID = _recipeService.GetRecipeByID(validRecipeID);
@@ -249,7 +249,7 @@ public class RecipeServiceTests
     public void GetFilteredRecipes_ProperSearchValues()
     {
         PopulateRecipeList();
-        List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
+        List<RecipeResponse>? allRecipes = _recipeService.GetAllRecipes();
         List<RecipeResponse> expectedFilteredRecipes = new List<RecipeResponse>();
 
         string? searchString = "Spaghetti";
@@ -383,6 +383,13 @@ public class RecipeServiceTests
     {
         Assert.Throws<ArgumentNullException>(() =>
             _recipeService.GetSortedRecipes(null, nameof(RecipeResponse.Author), true));
+    }
+    #endregion
+    #region UpdateRecipes()
+    [Fact]
+    public void UpdateRecipes_ProperValues_ReturnUpdated()
+    {
+
     }
     #endregion
 }

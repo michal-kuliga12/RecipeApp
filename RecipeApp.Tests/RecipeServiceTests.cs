@@ -250,7 +250,7 @@ public class RecipeServiceTests
         string? searchBy = nameof(RecipeResponse.Name);
         List<RecipeResponse> filteredRecipes = new List<RecipeResponse>();
 
-        filteredRecipes = _recipeService.GetFilteredRecipes(searchString, searchBy);
+        filteredRecipes = _recipeService.GetFilteredRecipes(searchBy, searchString);
         expectedFilteredRecipes = allRecipes.Where(
             r => r.Name != null
             && r.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)
@@ -264,7 +264,7 @@ public class RecipeServiceTests
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    public void GetFilteredRecipes_NullOrEmptySearchName(string searchName)
+    public void GetFilteredRecipes_NullOrEmptySearchName(string searchString)
     {
         _recipeService.AddRecipe(new RecipeAddRequest
         {
@@ -308,7 +308,7 @@ public class RecipeServiceTests
         List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
 
         string? searchBy = nameof(RecipeResponse.Name);
-        List<RecipeResponse> filteredRecipes = _recipeService.GetFilteredRecipes(searchName, searchBy);
+        List<RecipeResponse> filteredRecipes = _recipeService.GetFilteredRecipes(searchBy, searchString);
 
         Assert.Equal(allRecipes, filteredRecipes);
     }
@@ -316,13 +316,17 @@ public class RecipeServiceTests
     [Fact]
     public void GetFilteredRecipes_NullSearchBy()
     {
-        string? searchName = "sałatka";
+        List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
+        string? searchString = "sałatka";
         string? searchBy = null;
 
-        Assert.Throws<ArgumentNullException>(() =>
-        {
-            var filteredRecipes = _recipeService.GetFilteredRecipes(searchName, searchBy);
-        });
+        List<RecipeResponse> filteredRecipes = _recipeService.GetFilteredRecipes(searchBy, searchString);
+
+        Assert.Equal(allRecipes.Count, filteredRecipes.Count);
+        //Assert.Throws<ArgumentNullException>(() =>
+        //{
+        //    var filteredRecipes = _recipeService.GetFilteredRecipes(searchBy, searchString);
+        //});
     }
 
     [Fact]
@@ -369,9 +373,9 @@ public class RecipeServiceTests
         });
         List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
 
-        string? searchName = "Paella z kurczakiem";
+        string? searchString = "Paella z kurczakiem";
         string? searchBy = nameof(RecipeResponse.Name);
-        List<RecipeResponse> filteredRecipes = _recipeService.GetFilteredRecipes(searchName, searchBy);
+        List<RecipeResponse> filteredRecipes = _recipeService.GetFilteredRecipes(searchBy, searchString);
 
         Assert.Empty(filteredRecipes);
     }

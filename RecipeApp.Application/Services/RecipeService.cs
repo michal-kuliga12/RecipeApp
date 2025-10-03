@@ -50,7 +50,51 @@ public class RecipeService : IRecipeService
 
     public List<RecipeResponse> GetFilteredRecipes(string searchBy, string? searchString)
     {
-        throw new NotImplementedException();
+        List<RecipeResponse> allRecipes = GetAllRecipes();
+        List<RecipeResponse> filteredRecipes = allRecipes;
+
+        if (string.IsNullOrEmpty(searchBy) || string.IsNullOrEmpty(searchString))
+            return filteredRecipes;
+
+        switch (searchBy)
+        {
+            case nameof(RecipeResponse.Name):
+                filteredRecipes = allRecipes.Where(temp => temp.Name != null
+                    && temp.Name.Contains(searchString, StringComparison.CurrentCultureIgnoreCase)).ToList();
+                break;
+            case nameof(RecipeResponse.Description):
+                filteredRecipes = allRecipes.Where(temp => temp.Description != null
+                    && temp.Description.Contains(searchString, StringComparison.CurrentCultureIgnoreCase)).ToList();
+                break;
+            case nameof(RecipeResponse.Author):
+                filteredRecipes = allRecipes.Where(temp => temp.Author != null
+                    && temp.Author.Contains(searchString, StringComparison.CurrentCultureIgnoreCase)).ToList();
+                break;
+            case nameof(RecipeResponse.Category):
+                filteredRecipes = allRecipes.Where(temp => temp.Category != null
+                    && EnumDisplayHelper.GetDisplayName(temp.Category).Contains(searchString, StringComparison.CurrentCultureIgnoreCase)).ToList();
+                break;
+            case nameof(RecipeResponse.PreparationTime):
+                filteredRecipes = allRecipes.Where(temp => temp.PreparationTime != null
+                    && temp.PreparationTime.ToString().Equals(searchString)).ToList();
+                break;
+            case nameof(RecipeResponse.RecipeIngredients):
+                filteredRecipes = allRecipes.Where(temp => temp.RecipeIngredients != null
+                    && temp.RecipeIngredients.Any(ing => ing.Ingredient.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))).ToList();
+                break;
+            case nameof(RecipeResponse.Servings):
+                filteredRecipes = allRecipes.Where(temp => temp.Servings != null
+                    && temp.Servings.ToString().Equals(searchString)).ToList();
+                break;
+            case nameof(RecipeResponse.Rating):
+                filteredRecipes = allRecipes.Where(temp => temp.Rating != null
+                    && temp.Rating.ToString().Equals(searchString)).ToList();
+                break;
+            default:
+                filteredRecipes = allRecipes;
+                break;
+        }
+        return filteredRecipes;
     }
 
     public List<RecipeResponse> UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest)

@@ -9,6 +9,6 @@ public interface IRecipeService
     List<RecipeResponse>? GetAllRecipes();
     List<RecipeResponse>? GetFilteredRecipes(string searchBy, string? searchString);
     List<RecipeResponse>? GetSortedRecipes(List<RecipeResponse> recipeList, string sortBy, bool ascending = true);
-    List<RecipeResponse>? UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest);
+    RecipeResponse? UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest);
     bool DeleteRecipe(Guid? recipeID);
 }

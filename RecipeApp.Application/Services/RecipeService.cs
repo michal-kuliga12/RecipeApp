@@ -126,15 +126,45 @@ public class RecipeService : IRecipeService
         return sortedRecipes;
     }
 
-    public List<RecipeResponse> UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest)
+    public RecipeResponse UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest)
     {
-        throw new NotImplementedException();
+        if (recipeUpdateRequest is null)
+            throw new ArgumentNullException("RecipeUpdateRequest nie może być null");
+
+        bool isModelValid = ValidationHelper.ValidateModel(recipeUpdateRequest);
+
+        if (!isModelValid)
+            throw new ArgumentNullException("Model jest niepoprawny");
+
+        Recipe? recipeFound = _recipes.SingleOrDefault(temp => temp.ID == recipeUpdateRequest.ID);
+
+        if (recipeFound is null)
+            return null;
+
+        recipeFound.Name = recipeUpdateRequest.Name;
+        recipeFound.Description = recipeUpdateRequest.Description;
+        recipeFound.Author = recipeUpdateRequest.Author;
+        recipeFound.Category = recipeUpdateRequest.Category;
+        recipeFound.PreparationTime = recipeUpdateRequest.PreparationTime;
+        recipeFound.RecipeIngredients = recipeUpdateRequest.RecipeIngredients;
+        recipeFound.Servings = recipeUpdateRequest.Servings;
+        recipeFound.Rating = recipeUpdateRequest.Rating;
+        recipeFound.ImageUrl = recipeUpdateRequest.ImageUrl;
+
+        return recipeFound.ToRecipeResponse();
     }
 
     public bool DeleteRecipe(Guid? recipeID)
     {
-        throw new NotImplementedException();
+        if (recipeID is null)
+            throw new ArgumentNullException("RecipeID nie może być null");
+
+        Recipe? recipeToDelete = _recipes.SingleOrDefault(temp => temp.ID == recipeID);
+
+        if (recipeToDelete == null)
+            return false;
+
+        _recipes.Remove(recipeToDelete);
+        return true;
     }
-
-
 }

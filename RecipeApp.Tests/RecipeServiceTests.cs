@@ -385,11 +385,110 @@ public class RecipeServiceTests
             _recipeService.GetSortedRecipes(null, nameof(RecipeResponse.Author), true));
     }
     #endregion
-    #region UpdateRecipes()
+    #region UpdateRecipe()
     [Fact]
-    public void UpdateRecipes_ProperValues_ReturnUpdated()
+    public void UpdateRecipe_NullRecipe()
     {
+        RecipeUpdateRequest? recipeUpdateRequest = null;
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            _recipeService.UpdateRecipe(recipeUpdateRequest);
+        });
+    }
 
+    [Fact]
+    public void UpdateRecipe_NullID()
+    {
+        RecipeUpdateRequest recipeUpdateRequest = new RecipeUpdateRequest
+        {
+            ID = null,
+            Name = "Spaghetti Bolognese",
+            Description = "Klasyczne włoskie danie z makaronem spaghetti i sosem mięsnym.",
+            Author = "Jan Kowalski",
+            Category = Category.MainCourse,
+            PreparationTime = 45,
+            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
+            Servings = 4,
+            Rating = 4.5,
+            ImageUrl = "https://example.com/images/spaghetti.jpg",
+            CreatedAt = DateTime.Now
+        };
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            _recipeService.UpdateRecipe(recipeUpdateRequest);
+        });
+    }
+
+    [Fact]
+    public void UpdateRecipe_ValidData_UpdatesSuccessfully()
+    {
+        RecipeResponse addedRecipe = PopulateOneRecipe_ReturnsRecipeResponse();
+        RecipeUpdateRequest recipeToUpdate = new RecipeUpdateRequest
+        {
+            ID = addedRecipe.ID,
+            Name = "Spaghetti Carbonara",
+            Description = "Włoskie danie z makaronem spaghetti, jajkami, serem pecorino i boczkiem.",
+            Author = "Jan Kowalski",
+            Category = Category.MainCourse,
+            PreparationTime = 30,
+            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
+            Servings = 4,
+            Rating = 4.7,
+            ImageUrl = "https://example.com/images/spaghetti-carbonara.jpg",
+            CreatedAt = addedRecipe.CreatedAt // zachowujemy oryginalną datę utworzenia
+        };
+
+        RecipeResponse updatedRecipe = _recipeService.UpdateRecipe(recipeToUpdate);
+        RecipeResponse? recipeFromGetByID = _recipeService.GetRecipeByID(addedRecipe.ID);
+
+        // Assert
+        Assert.NotNull(updatedRecipe);
+        Assert.Equal(addedRecipe.ID, updatedRecipe.ID);
+        Assert.Equal(recipeToUpdate.Name, updatedRecipe.Name);
+        Assert.Equal(recipeToUpdate.Description, updatedRecipe.Description);
+        Assert.Equal(recipeToUpdate.Author, updatedRecipe.Author);
+        Assert.Equal(recipeToUpdate.Category, updatedRecipe.Category);
+        Assert.Equal(recipeToUpdate.PreparationTime, updatedRecipe.PreparationTime);
+        Assert.Equal(recipeToUpdate.Servings, updatedRecipe.Servings);
+        Assert.Equal(recipeToUpdate.Rating, updatedRecipe.Rating);
+        Assert.Equal(recipeToUpdate.ImageUrl, updatedRecipe.ImageUrl);
+        Assert.Equal(addedRecipe.CreatedAt, updatedRecipe.CreatedAt);
+
+        Assert.NotNull(recipeFromGetByID);
+        Assert.Equal(recipeToUpdate.Name, recipeFromGetByID.Name);
+        Assert.Equal(recipeToUpdate.Rating, recipeFromGetByID.Rating);
+    }
+
+    #endregion
+    #region DeleteRecipe()
+    [Fact]
+    public void DeleteRecipe_NullID()
+    {
+        Guid? invalidRecipeID = null;
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            _recipeService.DeleteRecipe(invalidRecipeID);
+        });
+    }
+
+    [Fact]
+    public void DeleteRecipe_InvalidID_ReturnsFalse()
+    {
+        Guid? invalidRecipeID = Guid.NewGuid();
+        bool result = _recipeService.DeleteRecipe(invalidRecipeID);
+        Assert.False(result);
+    }
+
+    public void DeleteRecipe_ValidID_DeletesSuccessfully()
+    {
+        RecipeResponse addedRecipe = PopulateOneRecipe_ReturnsRecipeResponse();
+        Guid? validRecipeID = addedRecipe.ID;
+        bool deleteResult = _recipeService.DeleteRecipe(validRecipeID);
+        RecipeResponse? recipeFromGetByID = _recipeService.GetRecipeByID(validRecipeID);
+        List<RecipeResponse> allRecipes = _recipeService.GetAllRecipes();
+        Assert.True(deleteResult);
+        Assert.Null(recipeFromGetByID);
+        Assert.DoesNotContain(addedRecipe, allRecipes);
     }
     #endregion
 }

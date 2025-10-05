@@ -44,6 +44,8 @@ public static class RecipeExtensions
             Category = recipe.Category,
             PreparationTime = recipe.PreparationTime,
             Servings = recipe.Servings,
+            Rating = recipe.Rating,
+            ImageUrl = recipe.ImageUrl,
             CreatedAt = recipe.CreatedAt,
         };
 }

@@ -2,6 +2,8 @@
 using RecipeApp.Application.DTOs;
 using RecipeApp.Application.Helpers;
 using RecipeApp.Application.Interfaces;
+using RecipeApp.Domain.Entities;
+using RecipeApp.Domain.Enums;
 
 namespace RecipeApp.Application.Services;
 
@@ -9,9 +11,23 @@ public class RecipeService : IRecipeService
 {
     private readonly List<Recipe> _recipes;
 
-    public RecipeService()
+    public RecipeService(bool initialize = true)
     {
         _recipes = new List<Recipe>();
+
+        if (initialize && !_recipes.Any())
+        {
+            AddRecipe(new RecipeAddRequest { Name = "Burger Classic", Description = "Soczysty burger z serem, sałatą i pomidorem", Author = "Anna Kowalska", Category = Category.MainCourse, PreparationTime = 20, RecipeIngredients = new List<RecipeIngredient> { }, Servings = 2, Rating = 4.5, ImageUrl = "https://foodish-api.com/images/burger/burger19.jpg", CreatedAt = DateTime.Now.AddDays(-10) });
+            AddRecipe(new RecipeAddRequest { Name = "Pizza Margherita", Description = "Klasyczna pizza z sosem pomidorowym i mozzarellą", Author = "Jan Nowak", Category = Category.MainCourse, PreparationTime = 25, RecipeIngredients = new List<RecipeIngredient> { }, Servings = 4, Rating = 4.8, ImageUrl = "https://foodish-api.com/images/pizza/pizza66.jpg", CreatedAt = DateTime.Now.AddDays(-5) });
+            AddRecipe(new RecipeAddRequest { Name = "Spaghetti Bolognese", Description = "Makaron z sosem mięsnym i pomidorami", Author = "Maria Zielińska", Category = Category.MainCourse, PreparationTime = 35, RecipeIngredients = new List<RecipeIngredient> { }, Servings = 3, Rating = 4.2, ImageUrl = "https://foodish-api.com/images/pasta/pasta14.jpg", CreatedAt = DateTime.Now.AddDays(-20) });
+            AddRecipe(new RecipeAddRequest { Name = "Tort Czekoladowy", Description = "Wilgotny tort czekoladowy z kremem", Author = "Katarzyna Wiśniewska", Category = Category.PastriesAndDesserts, PreparationTime = 60, RecipeIngredients = new List<RecipeIngredient> { }, Servings = 8, Rating = 4.9, ImageUrl = "https://foodish-api.com/images/dessert/dessert12.jpg", CreatedAt = DateTime.Now.AddDays(-2) });
+            AddRecipe(new RecipeAddRequest { Name = "Sałatka Grecka", Description = "Sałatka z pomidorów, ogórka, sera feta i oliwek", Author = "Piotr Nowicki", Category = Category.Salads, PreparationTime = 15, RecipeIngredients = new List<RecipeIngredient> { }, Servings = 2, Rating = 4.0, ImageUrl = "https://foodish-api.com/images/pasta/pasta24.jpg", CreatedAt = DateTime.Now.AddDays(-7) });
+            AddRecipe(new RecipeAddRequest { Name = "Samosa Pikantna", Description = "Pikantna przekąska z ziemniakami i groszkiem", Author = "Agnieszka Bąk", Category = Category.Snacks, PreparationTime = 30, RecipeIngredients = new List<RecipeIngredient> { }, Servings = 6, Rating = 4.3, ImageUrl = "https://foodish-api.com/images/samosa/samosa16.jpg", CreatedAt = DateTime.Now.AddDays(-12) });
+            AddRecipe(new RecipeAddRequest { Name = "Curry Z Kurczakiem", Description = "Aromatyczne curry z kurczakiem i warzywami", Author = "Łukasz Szymański", Category = Category.MainCourse, PreparationTime = 40, RecipeIngredients = new List<RecipeIngredient> { }, Servings = 4, Rating = 4.6, ImageUrl = "https://foodish-api.com/images/biryani/biryani32.jpg", CreatedAt = DateTime.Now.AddDays(-18) });
+            AddRecipe(new RecipeAddRequest { Name = "Dosa", Description = "Cienkie placki ryżowo-soczewicowe z farszem", Author = "Sunita Patel", Category = Category.MainCourse, PreparationTime = 20, RecipeIngredients = new List<RecipeIngredient> { }, Servings = 3, Rating = 4.4, ImageUrl = "https://foodish-api.com/images/dosa/dosa31.jpg", CreatedAt = DateTime.Now.AddDays(-8) });
+            AddRecipe(new RecipeAddRequest { Name = "Lody Waniliowe", Description = "Kremowe lody waniliowe z bitą śmietaną", Author = "Elżbieta Kowal", Category = Category.PastriesAndDesserts, PreparationTime = 10, RecipeIngredients = new List<RecipeIngredient> { }, Servings = 4, Rating = 4.7, ImageUrl = "https://foodish-api.com/images/dessert/dessert25.jpg", CreatedAt = DateTime.Now.AddDays(-1) });
+            AddRecipe(new RecipeAddRequest { Name = "Butter Chicken", Description = "Indyjski kurczak w maślanym sosie pomidorowym", Author = "Ravi Singh", Category = Category.MainCourse, PreparationTime = 50, RecipeIngredients = new List<RecipeIngredient> { }, Servings = 4, Rating = 4.8, ImageUrl = "https://foodish-api.com/images/butter-chicken/butter-chicken8.jpg", CreatedAt = DateTime.Now.AddDays(-15) });
+        }
     }
 
     public RecipeResponse AddRecipe(RecipeAddRequest? recipeAddRequest)

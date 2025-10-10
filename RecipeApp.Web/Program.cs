@@ -1,3 +1,6 @@
+using RecipeApp.Application.Interfaces;
+using RecipeApp.Application.Services;
+
 namespace CookBookApp
 {
     public class Program
@@ -5,9 +8,13 @@ namespace CookBookApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.Services.AddControllers();
+            builder.Services.AddControllersWithViews();
+
+            builder.Services.AddSingleton<IRecipeService, RecipeService>();
+
             var app = builder.Build();
 
+            app.UseStaticFiles();
             app.UseRouting();
             app.MapControllers();
 

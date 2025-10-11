@@ -1,8 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using RecipeApp.Domain.Entities;
 using RecipeApp.Domain.Enums;
 
-namespace Entities;
+namespace RecipeApp.Domain.Entities;
 
 public class Recipe
 {

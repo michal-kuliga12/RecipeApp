@@ -2,7 +2,7 @@
 using RecipeApp.Domain.Entities;
 using RecipeApp.Domain.Enums;
 
-namespace RecipeApp.Application.DTOs.Recipe;
+namespace RecipeApp.Application.DTOs.RecipeDTO;
 
 public class RecipeAddRequest
 {

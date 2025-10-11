@@ -1,4 +1,4 @@
-﻿using RecipeApp.Application.DTOs;
+﻿using RecipeApp.Application.DTOs.Recipe;
 using RecipeApp.Application.Services;
 using RecipeApp.Domain.Entities;
 using RecipeApp.Domain.Enums;

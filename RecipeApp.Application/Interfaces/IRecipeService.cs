@@ -1,4 +1,4 @@
-﻿using RecipeApp.Application.DTOs;
+﻿using RecipeApp.Application.DTOs.Recipe;
 
 namespace RecipeApp.Application.Interfaces;
 

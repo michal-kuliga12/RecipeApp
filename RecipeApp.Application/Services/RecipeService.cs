@@ -1,5 +1,5 @@
 ﻿using Entities;
-using RecipeApp.Application.DTOs;
+using RecipeApp.Application.DTOs.Recipe;
 using RecipeApp.Application.Helpers;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Domain.Entities;

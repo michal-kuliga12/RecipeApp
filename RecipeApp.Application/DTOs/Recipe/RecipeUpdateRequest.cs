@@ -1,12 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Entities;
+﻿using Entities;
 using RecipeApp.Domain.Entities;
 using RecipeApp.Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 
-namespace RecipeApp.Application.DTOs;
+namespace RecipeApp.Application.DTOs.Recipe;
 
-public class RecipeAddRequest
+public class RecipeUpdateRequest
 {
+    [Required(ErrorMessage = "Recipe musi mieć ID")]
+    public Guid? ID { get; set; }
     [Required(ErrorMessage = "Nazwa przepisu jest wymagana")]
     [StringLength(50, MinimumLength = 3, ErrorMessage = "Nazwa musi mieć od 3 do 50 znaków")]
     public string? Name { get; set; }
@@ -30,7 +32,6 @@ public class RecipeAddRequest
     [Required(ErrorMessage = "Data utworzenia jest wymagana")]
     [DataType(DataType.DateTime)]
     public DateTime CreatedAt { get; set; }
-
     public Recipe ToRecipe()
         => new Recipe()
         {
@@ -46,5 +47,3 @@ public class RecipeAddRequest
             CreatedAt = CreatedAt
         };
 }
-
-

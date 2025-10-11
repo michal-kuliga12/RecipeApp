@@ -7,21 +7,29 @@ public class IngredientResponse
 {
 
     [Required]
-    public Guid ID { get; set; }
+    public Guid? ID { get; set; }
     [Required(ErrorMessage = "Nazwa produktu jest wymagana")]
-    [Range(2, 50)]
+    [StringLength(50, MinimumLength = 2)]
     public string? Name { get; set; }
 
     public override bool Equals(object? obj)
     {
-        if (obj is not Ingredient other)
-            return false;
-
-        return ID == other.ID && Name == other.Name;
+        if (obj is not IngredientResponse other) return false;
+        return ID == other.ID && Name == other.Name; // albo wszystkie pola, które mają się liczyć
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(ID, Name);
+        return ID.GetHashCode();
     }
+}
+
+public static class IngredientExtension
+{
+    public static IngredientResponse ToIngredientResponse(this Ingredient ingredient)
+        => new IngredientResponse()
+        {
+            ID = ingredient.ID,
+            Name = ingredient.Name
+        };
 }

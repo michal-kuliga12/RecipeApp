@@ -5,9 +5,9 @@ namespace RecipeApp.Application.Interfaces;
 public interface IIngredientService
 {
     IngredientResponse? AddIngredient(IngredientAddRequest ingredientAddRequest);
-    IngredientResponse? GetIngredientByID(Guid? IngredientID);
+    IngredientResponse? GetIngredientByID(Guid? ingredientID);
     List<IngredientResponse>? GetAllIngredients();
     List<IngredientResponse>? GetFilteredIngredients(string? searchString);
     IngredientResponse? UpdateIngredient(IngredientUpdateRequest ingredientUpdateRequest);
-    bool DeleteIngredient(Guid? IngredientID);
+    bool DeleteIngredient(Guid? ingredientID);
 }

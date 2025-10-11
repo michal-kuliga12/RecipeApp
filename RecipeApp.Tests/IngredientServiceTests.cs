@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using RecipeApp.Application.DTOs.IngredientDTO;
+﻿using RecipeApp.Application.DTOs.IngredientDTO;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Application.Services;
 
@@ -36,17 +35,10 @@ public class IngredientServiceTests
     {
         IngredientAddRequest ingredientToAdd = new() { Name = invalidName };
 
-        IngredientResponse? ingredientResponseFromAdd = _ingredientService.AddIngredient(ingredientToAdd);
-
-        var validationContext = new ValidationContext(ingredientResponseFromAdd);
-        var validationResults = new List<ValidationResult>();
-
-        // Act
-        var isValid = Validator.TryValidateObject(ingredientResponseFromAdd, validationContext, validationResults, true);
-
-        // Assert
-        Assert.False(isValid); // Obiekt powinien być niepoprawny
-        Assert.NotEmpty(validationResults); // Powinna być przynajmniej jedna wiadomość błędu
+        Assert.Throws<ArgumentException>(() =>
+        {
+            _ingredientService.AddIngredient(ingredientToAdd);
+        });
     }
 
     [Fact]

@@ -7,6 +7,6 @@ public class IngredientUpdateRequest
     [Required]
     public Guid? ID { get; set; }
     [Required(ErrorMessage = "Nazwa produktu jest wymagana")]
-    [Range(2, 50)]
+    [StringLength(50, MinimumLength = 2)]
     public string? Name { get; set; }
 }

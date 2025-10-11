@@ -1,4 +1,4 @@
-﻿using RecipeApp.Application.DTOs.Ingredient;
+﻿using RecipeApp.Application.DTOs.IngredientDTO;
 using RecipeApp.Application.Interfaces;
 
 namespace RecipeApp.Application.Services
@@ -14,7 +14,7 @@ namespace RecipeApp.Application.Services
             throw new NotImplementedException();
         }
 
-        public bool? DeleteIngredient(Guid? IngredientID)
+        public bool DeleteIngredient(Guid? IngredientID)
         {
             throw new NotImplementedException();
         }

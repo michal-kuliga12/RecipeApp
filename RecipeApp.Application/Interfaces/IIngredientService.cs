@@ -9,5 +9,5 @@ public interface IIngredientService
     List<IngredientResponse>? GetAllIngredients();
     List<IngredientResponse>? GetFilteredIngredients(string? searchString);
     IngredientResponse? UpdateIngredient(IngredientUpdateRequest ingredientUpdateRequest);
-    bool? DeleteIngredient(Guid? IngredientID);
+    bool DeleteIngredient(Guid? IngredientID);
 }

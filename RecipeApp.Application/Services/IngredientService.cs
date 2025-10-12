@@ -8,10 +8,16 @@ namespace RecipeApp.Application.Services
     public class IngredientService : IIngredientService
     {
         private readonly List<Ingredient> _ingredients;
-        public IngredientService()
+        public IngredientService(bool initialize = true)
         {
             _ingredients = new List<Ingredient>() { };
 
+            if (initialize = true && !_ingredients.Any())
+            {
+                AddIngredient(new IngredientAddRequest { Name = "Pomidor" });
+                AddIngredient(new IngredientAddRequest { Name = "Ogórek" });
+                AddIngredient(new IngredientAddRequest { Name = "Makaron" });
+            }
         }
 
         public IngredientResponse? AddIngredient(IngredientAddRequest ingredientAddRequest)

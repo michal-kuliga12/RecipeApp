@@ -1,4 +1,8 @@
-﻿using RecipeApp.Application.DTOs.RecipeDTO;
+﻿using System.ComponentModel.DataAnnotations;
+using RecipeApp.Application.DTOs.IngredientDTO;
+using RecipeApp.Application.DTOs.RecipeDTO;
+using RecipeApp.Application.DTOs.RecipeIngredientDTO;
+using RecipeApp.Application.Interfaces;
 using RecipeApp.Application.Services;
 using RecipeApp.Domain.Entities;
 using RecipeApp.Domain.Enums;
@@ -7,11 +11,13 @@ namespace RecipeApp.Tests;
 
 public class RecipeServiceTests
 {
-    private readonly RecipeService _recipeService;
+    private readonly IRecipeService _recipeService;
+    private readonly IIngredientService _ingredientService;
 
     public RecipeServiceTests()
     {
         _recipeService = new RecipeService();
+        _ingredientService = new IngredientService();
     }
 
     #region HelperMethods
@@ -57,7 +63,7 @@ public class RecipeServiceTests
             CreatedAt = DateTime.Now
         });
     }
-    private RecipeResponse PopulateOneRecipe_ReturnsRecipeResponse()
+    private RecipeResponse? PopulateOneRecipe_ReturnsRecipeResponse()
     {
         return _recipeService.AddRecipe(new RecipeAddRequest
         {
@@ -71,6 +77,14 @@ public class RecipeServiceTests
             Rating = 4.5,
             ImageUrl = "https://example.com/images/spaghetti.jpg",
             CreatedAt = DateTime.Now
+        });
+    }
+
+    private IngredientResponse? PopulateOneIngredient_ReturnsIngredientResponse()
+    {
+        return _ingredientService.AddIngredient(new IngredientAddRequest()
+        {
+            Name = "Pomidor"
         });
     }
     #endregion
@@ -491,4 +505,112 @@ public class RecipeServiceTests
         Assert.DoesNotContain(addedRecipe, allRecipes);
     }
     #endregion
+
+    #region AddRecipeIngredient
+    [Fact]
+    public void AddRecipeIngredient_ValidRequest()
+    {
+        RecipeResponse recipe = PopulateOneRecipe_ReturnsRecipeResponse();
+        Guid recipeID = recipe.ID;
+
+        IngredientResponse ingredient = PopulateOneIngredient_ReturnsIngredientResponse();
+        Guid ingredientID = ingredient.ID;
+
+        RecipeIngredientAddRequest recipeAddIngredientRequest = new()
+        {
+            IngredientID = ingredientID,
+            RecipeID = recipeID,
+            Quantity = 1,
+            Unit = Unit.Piece
+        };
+
+        RecipeResponse? recipeWithAddedIngredient = _recipeService.AddRecipeIngredient(recipeAddIngredientRequest);
+
+        Assert.Single(recipeWithAddedIngredient.RecipeIngredients);
+        var addedIngredient = recipeWithAddedIngredient.RecipeIngredients.First();
+
+        Assert.Equal(recipeAddIngredientRequest.IngredientID, addedIngredient.ID);
+        Assert.Equal(recipeAddIngredientRequest.RecipeID, addedIngredient.ID);
+        Assert.Equal(recipeAddIngredientRequest.Quantity, addedIngredient.Quantity);
+        Assert.Equal(recipeAddIngredientRequest.Unit, addedIngredient.Unit);
+
+    }
+
+    [Fact]
+    public void AddRecipeIngredient_InvalidQuantity_ShouldFailValidation()
+    {
+        var request = new RecipeIngredientAddRequest
+        {
+            IngredientID = Guid.NewGuid(),
+            RecipeID = Guid.NewGuid(),
+            Quantity = 0,  // niepoprawna ilość
+            Unit = Unit.Gram
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var context = new ValidationContext(request);
+        bool isValid = Validator.TryValidateObject(request, context, validationResults, true);
+
+        Assert.False(isValid);
+        Assert.Contains(validationResults, r => r.ErrorMessage.Contains("Ilość musi być większa niż 0 i mniejsza niż 10 000"));
+    }
+
+    [Fact]
+    public void AddRecipeIngredient_InvalidIngredientID()
+    {
+        // Arrange
+        var request = new RecipeIngredientAddRequest
+        {
+            IngredientID = Guid.Empty,
+            RecipeID = Guid.NewGuid(),  // odpowiednik "braku wartości"
+            Quantity = 10,
+            Unit = Unit.Gram
+        };
+
+        // Act
+        var response = _recipeService.AddRecipeIngredient(request);
+
+        Assert.Null(response);
+    }
+    [Fact]
+    public void AddRecipeIngredient_EmptyRecipeID_ReturnsError()
+    {
+        // Arrange
+        var request = new RecipeIngredientAddRequest
+        {
+            IngredientID = Guid.NewGuid(),
+            RecipeID = Guid.Empty,  // odpowiednik "braku wartości"
+            Quantity = 10,
+            Unit = Unit.Gram
+        };
+
+        // Act
+        var response = _recipeService.AddRecipeIngredient(request);
+
+        Assert.Null(response);
+    }
+
+    [Fact]
+    public void AddRecipeIngredient_MissingUnit_ShouldFailValidation()
+    {
+        var request = new RecipeIngredientAddRequest
+        {
+            IngredientID = Guid.NewGuid(),
+            RecipeID = Guid.NewGuid(),
+            Quantity = 10,
+            Unit = 0
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var context = new ValidationContext(request);
+        bool isValid = Validator.TryValidateObject(request, context, validationResults, true);
+
+        Assert.False(isValid);
+        Assert.Contains(validationResults, r => r.ErrorMessage.Contains("Jednostka jest wymagana"));
+    }
+    #endregion
+    #region UpdateRecipeIngredient
+
+    #endregion
+
 }

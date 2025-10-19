@@ -13,6 +13,6 @@ public interface IRecipeService
     RecipeResponse? UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest);
     bool DeleteRecipe(Guid? recipeID);
     RecipeResponse? AddRecipeIngredient(RecipeIngredientAddRequest recipeIngredientAddRequest);
-    RecipeResponse? UpdateRecipeIngredient(RecipeIngredientAddRequest recipeIngredientUpdateRequest);
+    RecipeResponse? UpdateRecipeIngredient(RecipeIngredientUpdateRequest recipeIngredientUpdateRequest);
     RecipeResponse? DeleteRecipeIngredient(Guid? recipeIngredientID);
 }

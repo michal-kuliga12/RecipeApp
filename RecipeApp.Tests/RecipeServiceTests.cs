@@ -13,11 +13,13 @@ public class RecipeServiceTests
 {
     private readonly IRecipeService _recipeService;
     private readonly IIngredientService _ingredientService;
+    private readonly IRecipeIngredientService _recipeIngredientService;
 
     public RecipeServiceTests()
     {
         _recipeService = new RecipeService();
         _ingredientService = new IngredientService();
+        _recipeIngredientService = new RecipeIngredientService(_recipeService,_ingredientService);
     }
 
     #region HelperMethods
@@ -510,7 +512,7 @@ public class RecipeServiceTests
     [Fact]
     public void AddRecipeIngredient_ValidRequest()
     {
-        RecipeResponse recipe = PopulateOneRecipe_ReturnsRecipeResponse();
+        RecipeResponse? recipe = PopulateOneRecipe_ReturnsRecipeResponse();
         Guid recipeID = recipe.ID;
 
         IngredientResponse ingredient = PopulateOneIngredient_ReturnsIngredientResponse();
@@ -524,7 +526,7 @@ public class RecipeServiceTests
             Unit = Unit.Piece
         };
 
-        RecipeResponse? recipeWithAddedIngredient = _recipeService.AddRecipeIngredient(recipeAddIngredientRequest);
+        RecipeResponse? recipeWithAddedIngredient = _recipeIngredientService.AddRecipeIngredient(recipeAddIngredientRequest);
 
         Assert.Single(recipeWithAddedIngredient.RecipeIngredients);
         var addedIngredient = recipeWithAddedIngredient.RecipeIngredients.First();
@@ -568,7 +570,7 @@ public class RecipeServiceTests
         };
 
         // Act
-        var response = _recipeService.AddRecipeIngredient(request);
+        var response = _recipeIngredientService.AddRecipeIngredient(request);
 
         Assert.Null(response);
     }
@@ -585,7 +587,7 @@ public class RecipeServiceTests
         };
 
         // Act
-        var response = _recipeService.AddRecipeIngredient(request);
+        var response = _recipeIngredientService.AddRecipeIngredient(request);
 
         Assert.Null(response);
     }
@@ -608,8 +610,127 @@ public class RecipeServiceTests
         Assert.False(isValid);
         Assert.Contains(validationResults, r => r.ErrorMessage.Contains("Jednostka jest wymagana"));
     }
+
+    [Fact]
+    public void AddRecipeIngredient_AlreadyExists_ReturnsError()
+    {
+        RecipeResponse? recipe = PopulateOneRecipe_ReturnsRecipeResponse();
+        Guid recipeID = recipe.ID;
+
+        IngredientResponse ingredient = PopulateOneIngredient_ReturnsIngredientResponse();
+        Guid ingredientID = ingredient.ID;
+
+        RecipeIngredientAddRequest recipeAddIngredientRequest = new()
+        {
+            IngredientID = ingredientID,
+            RecipeID = recipeID,
+            Quantity = 1,
+            Unit = Unit.Piece
+        };
+
+        RecipeResponse? recipeWithAddedIngredient = _recipeIngredientService.AddRecipeIngredient(recipeAddIngredientRequest);
+
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            _recipeIngredientService.AddRecipeIngredient(recipeAddIngredientRequest);
+        });
+    }
+
     #endregion
+
     #region UpdateRecipeIngredient
+    [Fact]
+    public void UpdateRecipeIngredient_ValidRequest()
+    {
+        // Arrange
+        IngredientResponse? ingredient = PopulateOneIngredient_ReturnsIngredientResponse();
+        Guid ingredientID = ingredient.ID;
+
+        RecipeResponse? recipe = _recipeService.AddRecipe(new RecipeAddRequest
+        {
+            Name = "Spaghetti Bolognese",
+            Description = "Klasyczne włoskie danie z makaronem spaghetti i sosem mięsnym.",
+            Author = "Jan Kowalski",
+            Category = Category.MainCourse,
+            PreparationTime = 45,
+            RecipeIngredients = new List<RecipeIngredient>(),
+            Servings = 4,
+            Rating = 4.5,
+            ImageUrl = "https://example.com/images/spaghetti.jpg",
+            CreatedAt = DateTime.Now
+        });
+        RecipeResponse? recipeWithIngredient = _recipeIngredientService.AddRecipeIngredient(new RecipeIngredientAddRequest
+        {
+            IngredientID = ingredientID,
+            RecipeID = recipe.ID,
+            Quantity = 1,
+            Unit = Unit.Piece
+        });
+
+        //Act
+        RecipeIngredient? addedIngredient = recipeWithIngredient.RecipeIngredients.First();
+        RecipeIngredientUpdateRequest recipeUpdateIngredientRequest = new()
+        {
+            ID = addedIngredient.ID,
+            IngredientID = ingredientID,
+            RecipeID = recipeWithIngredient.ID,
+            Quantity = 3,
+            Unit = Unit.Gram
+        };
+        RecipeResponse? recipeWithUpdatedIngredient = _recipeIngredientService.UpdateRecipeIngredient(recipeUpdateIngredientRequest);
+        RecipeIngredient? updatedIngredient = recipeWithUpdatedIngredient.RecipeIngredients.First();
+
+        Assert.NotNull(addedIngredient);
+        Assert.NotEmpty(recipeWithIngredient.RecipeIngredients);
+        Assert.NotNull(updatedIngredient);
+        Assert.NotEmpty(recipeWithUpdatedIngredient.RecipeIngredients);
+        Assert.Equal(addedIngredient.ID, updatedIngredient.ID);
+        Assert.Equal(addedIngredient.IngredientID, updatedIngredient.IngredientID);
+        Assert.Equal(addedIngredient.RecipeID, updatedIngredient.RecipeID);
+        Assert.Equal(recipeUpdateIngredientRequest.Unit, updatedIngredient.Unit);
+        Assert.Equal(recipeUpdateIngredientRequest.Quantity, updatedIngredient.Quantity);
+    }
+
+    [Fact]
+    public void UpdateRecipeIngredient_ShouldFail_WhenIngredientNotFound()
+    {
+        // Arrange
+        Guid nonExistentId = Guid.NewGuid();
+        RecipeIngredientUpdateRequest request = new RecipeIngredientUpdateRequest
+        {
+            ID = nonExistentId,
+            IngredientID = Guid.NewGuid(),
+            RecipeID = Guid.NewGuid(),
+            Quantity = 5,
+            Unit = Unit.Gram
+        };
+
+        // Act
+        RecipeResponse? result = _recipeIngredientService.UpdateRecipeIngredient(request);
+
+        // Assert
+        Assert.Null(result); // lub inny mechanizm obsługi błędu, jeśli rzucany jest wyjątek
+    }
+
+    [Fact]
+    public void UpdateRecipeIngredient_ShouldFail_WhenIdIsEmpty()
+    {
+        // Arrange
+        RecipeIngredientUpdateRequest request = new RecipeIngredientUpdateRequest
+        {
+            ID = Guid.Empty,
+            IngredientID = Guid.NewGuid(),
+            RecipeID = Guid.NewGuid(),
+            Quantity = 5,
+            Unit = Unit.Gram
+        };
+
+        // Act
+        RecipeResponse? result = _recipeIngredientService.UpdateRecipeIngredient(request);
+
+        // Assert
+        Assert.Null(result); // lub Assert.Throws<ValidationException>(() => ...)
+    }
 
     #endregion
 

@@ -1,5 +1,6 @@
 ﻿using RecipeApp.Application.DTOs.RecipeDTO;
 using RecipeApp.Application.DTOs.RecipeIngredientDTO;
+using RecipeApp.Domain.Entities;
 
 namespace RecipeApp.Application.Interfaces;
 
@@ -12,7 +13,5 @@ public interface IRecipeService
     List<RecipeResponse>? GetSortedRecipes(List<RecipeResponse> recipeList, string sortBy, bool ascending = true);
     RecipeResponse? UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest);
     bool DeleteRecipe(Guid? recipeID);
-    RecipeResponse? AddRecipeIngredient(RecipeIngredientAddRequest recipeIngredientAddRequest);
-    RecipeResponse? UpdateRecipeIngredient(RecipeIngredientUpdateRequest recipeIngredientUpdateRequest);
-    RecipeResponse? DeleteRecipeIngredient(Guid? recipeIngredientID);
+    Recipe? GetRecipeEntityByID(Guid? recipeID);
 }

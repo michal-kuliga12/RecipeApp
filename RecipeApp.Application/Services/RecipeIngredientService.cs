@@ -91,7 +91,31 @@ public class RecipeIngredientService : IRecipeIngredientService
 
     public RecipeResponse? UpdateRecipeIngredient(RecipeIngredientUpdateRequest recipeIngredientUpdateRequest)
     {
-        throw new NotImplementedException();
+        if (recipeIngredientUpdateRequest is null)
+            throw new ArgumentNullException("RecipeIngredientUpdateRequest nie może być null");
+
+        bool isValid = ValidationHelper.ValidateModel(recipeIngredientUpdateRequest);
+        if (!isValid)
+            throw new ArgumentException("Wprowadzono niepoprawne dane");
+
+        Guid? ingredientID = recipeIngredientUpdateRequest.IngredientID;
+        IngredientResponse? ingredientFound = _ingredientService.GetIngredientByID(ingredientID);
+        if (ingredientFound is null)
+            throw new InvalidOperationException("Podany przepis nie istnieje w bazie danych");
+
+        Guid? recipeID = recipeIngredientUpdateRequest.RecipeID;
+        Recipe? recipeFound = _recipeService.GetRecipeEntityByID(recipeID);
+        if (recipeFound is null)
+            throw new InvalidOperationException("Podany przepis nie istnieje w bazie danych");
+
+        RecipeIngredient? recipeIngredientToModify = recipeFound.RecipeIngredients.FirstOrDefault(i => i.ID == recipeIngredientUpdateRequest.ID);
+        if (recipeIngredientToModify is null)
+            throw new InvalidOperationException("Nie znaleziono przepisu do modyfikacji");
+
+        recipeIngredientToModify.Quantity = recipeIngredientUpdateRequest.Quantity.Value!;
+        recipeIngredientToModify.Unit = recipeIngredientUpdateRequest.Unit.Value!;
+
+        return recipeFound.ToRecipeResponse();
     }
 
     public RecipeResponse? DeleteRecipeIngredient(Guid? recipeIngredientID)

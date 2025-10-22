@@ -2,6 +2,7 @@
 using RecipeApp.Application.DTOs.IngredientDTO;
 using RecipeApp.Application.DTOs.RecipeDTO;
 using RecipeApp.Application.DTOs.RecipeIngredientDTO;
+using RecipeApp.Application.Helpers;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Application.Services;
 using RecipeApp.Domain.Entities;
@@ -508,7 +509,7 @@ public class RecipeServiceTests
     }
     #endregion
 
-    #region AddRecipeIngredient
+    #region AddRecipeIngredient()
     [Fact]
     public void AddRecipeIngredient_ValidRequest()
     {
@@ -637,8 +638,7 @@ public class RecipeServiceTests
     }
 
     #endregion
-
-    #region UpdateRecipeIngredient
+    #region UpdateRecipeIngredient()
     [Fact]
     public void UpdateRecipeIngredient_ValidRequest()
     {
@@ -692,47 +692,116 @@ public class RecipeServiceTests
     }
 
     [Fact]
-    public void UpdateRecipeIngredient_ShouldFail_WhenIngredientNotFound()
+    public void UpdateRecipeIngredient_InvalidOperation_WhenRecipeIngredientNotFound()
     {
-        // Arrange
-        Guid nonExistentId = Guid.NewGuid();
+        IngredientResponse? addedIngredient = PopulateOneIngredient_ReturnsIngredientResponse();
+        RecipeResponse? addedRecipe = PopulateOneRecipe_ReturnsRecipeResponse();
+
         RecipeIngredientUpdateRequest request = new RecipeIngredientUpdateRequest
         {
-            ID = nonExistentId,
-            IngredientID = Guid.NewGuid(),
-            RecipeID = Guid.NewGuid(),
+            ID = Guid.NewGuid(),
+            IngredientID = addedIngredient.ID,
+            RecipeID = addedRecipe.ID,
             Quantity = 5,
             Unit = Unit.Gram
         };
 
-        // Act
-        RecipeResponse? result = _recipeIngredientService.UpdateRecipeIngredient(request);
-
-        // Assert
-        Assert.Null(result); // lub inny mechanizm obsługi błędu, jeśli rzucany jest wyjątek
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            RecipeResponse? result = _recipeIngredientService.UpdateRecipeIngredient(request);
+        });
     }
 
     [Fact]
-    public void UpdateRecipeIngredient_ShouldFail_WhenIdIsEmpty()
+    public void UpdateRecipeIngredient_InvalidOperation_WhenIngredientNotFound()
     {
-        // Arrange
+        IngredientResponse? addedIngredient = PopulateOneIngredient_ReturnsIngredientResponse();
+        RecipeResponse? addedRecipe = PopulateOneRecipe_ReturnsRecipeResponse();
+
         RecipeIngredientUpdateRequest request = new RecipeIngredientUpdateRequest
         {
-            ID = Guid.Empty,
+            ID = Guid.NewGuid(),
             IngredientID = Guid.NewGuid(),
+            RecipeID = addedRecipe.ID,
+            Quantity = 5,
+            Unit = Unit.Gram
+        };
+
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            RecipeResponse? result = _recipeIngredientService.UpdateRecipeIngredient(request);
+        });
+    }
+    [Fact]
+    public void UpdateRecipeIngredient_InvalidOperation_WhenRecipeNotFound()
+    {
+        IngredientResponse? addedIngredient = PopulateOneIngredient_ReturnsIngredientResponse();
+        RecipeResponse? addedRecipe = PopulateOneRecipe_ReturnsRecipeResponse();
+
+        RecipeIngredientUpdateRequest request = new RecipeIngredientUpdateRequest
+        {
+            ID = Guid.NewGuid(),
+            IngredientID = addedIngredient.ID,
             RecipeID = Guid.NewGuid(),
             Quantity = 5,
             Unit = Unit.Gram
         };
 
-        // Act
-        RecipeResponse? result = _recipeIngredientService.UpdateRecipeIngredient(request);
-
-        // Assert
-        Assert.Null(result); // lub Assert.Throws<ValidationException>(() => ...)
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            RecipeResponse? result = _recipeIngredientService.UpdateRecipeIngredient(request);
+        });
     }
 
+    public static IEnumerable<object[]> InvalidGuids =>
+    [
+        new object[] { null, Guid.NewGuid(), Guid.NewGuid() },
+        new object[] { Guid.Empty, Guid.NewGuid(), Guid.NewGuid() },
+
+        new object[] { Guid.NewGuid(), null, Guid.NewGuid() },
+        new object[] { Guid.NewGuid(), Guid.Empty, Guid.NewGuid() },
+
+        new object[] { Guid.NewGuid(), Guid.NewGuid(), null },
+        new object[] { Guid.NewGuid(), Guid.NewGuid(), Guid.Empty }
+    ];
+
+
+    [Theory]
+    [MemberData(nameof(InvalidGuids))]
+    public void UpdateRecipeIngredient_ShouldFail_IDValidationFailed(Guid? id, Guid? ingredientId, Guid? recipeId)
+    {
+        // Arrange
+        var request = new RecipeIngredientUpdateRequest
+        {
+            ID = id,
+            IngredientID = ingredientId,
+            RecipeID = recipeId,
+            Quantity = 10,
+            Unit = Unit.Gram
+        };
+
+        // Act
+        bool isValid = ValidationHelper.ValidateModel(request);
+
+        // Assert
+        Assert.False(isValid);
+    }
+
+    public void UpdateRecipeIngredient_NullRequest_ThrowException(Guid? id, Guid? ingredientId, Guid? recipeId)
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            _recipeIngredientService.UpdateRecipeIngredient(null);
+        });
+    }
     // Update recipe
+    // request ?= null
+    // recipe get by id
+    // recipe ?= null
+    // walidacja
+    // get recipeingredient by ID
+    // aktualizacja recipe ingredient
+    // return recipe response
     #endregion
 
 }

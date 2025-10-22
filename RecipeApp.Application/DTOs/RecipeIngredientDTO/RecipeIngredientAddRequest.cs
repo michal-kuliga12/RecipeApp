@@ -1,15 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using RecipeApp.Domain.Entities;
 using RecipeApp.Domain.Enums;
+using RecipeApp.Domain.Validation;
 
 namespace RecipeApp.Application.DTOs.RecipeIngredientDTO;
 
 public class RecipeIngredientAddRequest
 {
+    [NotEmptyGuid(ErrorMessage = "ID nie może być puste")]
     public Guid? IngredientID { get; set; }
     [StringLength(maximumLength: 50, ErrorMessage = "Nazwa składnika nie może być dłuższa niż 50 znaków")]
     public string? IngredientName { get; set; }
-    [Required(ErrorMessage = "RecipeID jest wymagany")]
+    [NotEmptyGuid(ErrorMessage = "ID nie może być puste")]
     public Guid? RecipeID { get; set; }
     [Range(0.1, 10000, ErrorMessage = "Ilość musi być większa niż 0 i mniejsza niż 10 000")]
     public double? Quantity { get; set; }
@@ -31,5 +33,5 @@ public class RecipeIngredientAddRequest
             Unit = Unit ?? Domain.Enums.Unit.Gram
         };
     }
-            
+
 }

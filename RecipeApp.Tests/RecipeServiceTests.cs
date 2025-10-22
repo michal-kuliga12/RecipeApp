@@ -803,5 +803,50 @@ public class RecipeServiceTests
     // aktualizacja recipe ingredient
     // return recipe response
     #endregion
+    #region DeleteRecipeIngredient()
+    [Fact]
+    public void DeleteRecipeIngredient_NullID_ThrowsException()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+        {
+            _recipeIngredientService.DeleteRecipeIngredient(null);
+        });
+    }
 
+    [Fact]
+    public void DeleteRecipeIngredient_InvalidID_ReturnsFalse()
+    {
+        Guid? invalidRecipeIngredientID = Guid.NewGuid();
+        bool result = _recipeService.DeleteRecipe(invalidRecipeIngredientID);
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void DeleteRecipeIngredient_ValidID_DeletesSuccessfully()
+    {
+        // Arrange
+        RecipeResponse addedRecipe = PopulateOneRecipe_ReturnsRecipeResponse()!;
+        Guid? validRecipeID = addedRecipe.ID;
+        IngredientResponse addedIngredient = PopulateOneIngredient_ReturnsIngredientResponse()!;
+        Guid? validIngredientID = addedIngredient.ID;
+
+        RecipeIngredientAddRequest request = new()
+        {
+            IngredientID = validIngredientID,
+            RecipeID = validRecipeID,
+            Quantity = 10,
+            Unit = Unit.Gram
+        };
+        RecipeResponse recipeWithAddedIngredient = _recipeIngredientService.AddRecipeIngredient(request)!;
+        Guid recipeIngredientID = recipeWithAddedIngredient.RecipeIngredients!.First().ID;
+
+        // Act
+        bool deleteResult = _recipeIngredientService.DeleteRecipeIngredient(recipeIngredientID);
+
+        // Assert
+        Assert.True(deleteResult);
+        List<RecipeIngredient> recipeIngredients = _recipeService.GetRecipeByID(validRecipeID)!.RecipeIngredients!;
+        Assert.Empty(recipeIngredients);
+    }
 }
+#endregion

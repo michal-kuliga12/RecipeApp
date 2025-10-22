@@ -118,8 +118,8 @@ public class RecipeIngredientService : IRecipeIngredientService
         return recipeFound.ToRecipeResponse();
     }
 
-    public RecipeResponse? DeleteRecipeIngredient(Guid? recipeIngredientID)
+    public bool DeleteRecipeIngredient(Guid? recipeIngredientID)
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Metoda zostanie dodana po implementacji repozytoriów");
     }
 }

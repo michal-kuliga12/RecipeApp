@@ -19,7 +19,7 @@ public class RecipeServiceTests
     {
         _recipeService = new RecipeService();
         _ingredientService = new IngredientService();
-        _recipeIngredientService = new RecipeIngredientService(_recipeService,_ingredientService);
+        _recipeIngredientService = new RecipeIngredientService(_recipeService, _ingredientService);
     }
 
     #region HelperMethods
@@ -74,7 +74,7 @@ public class RecipeServiceTests
             Author = "Jan Kowalski",
             Category = Category.MainCourse,
             PreparationTime = 45,
-            RecipeIngredients = new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } },
+            RecipeIngredients = new List<RecipeIngredient> { },
             Servings = 4,
             Rating = 4.5,
             ImageUrl = "https://example.com/images/spaghetti.jpg",
@@ -531,8 +531,8 @@ public class RecipeServiceTests
         Assert.Single(recipeWithAddedIngredient.RecipeIngredients);
         var addedIngredient = recipeWithAddedIngredient.RecipeIngredients.First();
 
-        Assert.Equal(recipeAddIngredientRequest.IngredientID, addedIngredient.ID);
-        Assert.Equal(recipeAddIngredientRequest.RecipeID, addedIngredient.ID);
+        Assert.Equal(recipeAddIngredientRequest.IngredientID, addedIngredient.IngredientID);
+        Assert.Equal(recipeAddIngredientRequest.RecipeID, addedIngredient.RecipeID);
         Assert.Equal(recipeAddIngredientRequest.Quantity, addedIngredient.Quantity);
         Assert.Equal(recipeAddIngredientRequest.Unit, addedIngredient.Unit);
 
@@ -600,7 +600,7 @@ public class RecipeServiceTests
             IngredientID = Guid.NewGuid(),
             RecipeID = Guid.NewGuid(),
             Quantity = 10,
-            Unit = 0
+            Unit = null
         };
 
         var validationResults = new List<ValidationResult>();
@@ -732,6 +732,7 @@ public class RecipeServiceTests
         Assert.Null(result); // lub Assert.Throws<ValidationException>(() => ...)
     }
 
+    // Update recipe
     #endregion
 
 }

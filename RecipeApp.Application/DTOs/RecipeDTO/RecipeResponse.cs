@@ -42,6 +42,7 @@ public static class RecipeExtensions
             Author = recipe.Author,
             Category = recipe.Category,
             PreparationTime = recipe.PreparationTime,
+            RecipeIngredients = recipe.RecipeIngredients,
             Servings = recipe.Servings,
             Rating = recipe.Rating,
             ImageUrl = recipe.ImageUrl,

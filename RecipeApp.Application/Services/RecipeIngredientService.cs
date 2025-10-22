@@ -23,6 +23,7 @@ public class RecipeIngredientService : IRecipeIngredientService
         if (recipeIngredientAddRequest is null)
             throw new ArgumentNullException("RecipeIngredientAddRequest nie może być null");
 
+
         Guid? recipeID = recipeIngredientAddRequest?.RecipeID;
         if (recipeID is null)
             throw new ArgumentNullException("RecipeID nie może być null");
@@ -32,13 +33,22 @@ public class RecipeIngredientService : IRecipeIngredientService
         if (recipeFound is null)
             return null;
 
+        recipeFound.RecipeIngredients ??= new List<RecipeIngredient>();
+
+
+        bool alreadyExists = recipeFound.RecipeIngredients.Any(ri =>
+        ri.IngredientID == recipeIngredientAddRequest.IngredientID);
+        if (alreadyExists)
+            throw new InvalidOperationException("Składnik o podanym ID jest już przypisany do przepisu.");
+
+
         bool isModelValid = ValidationHelper.ValidateModel(recipeIngredientAddRequest);
         if (!isModelValid)
             throw new ArgumentException("Niepoprawne wartości w RecipeIngredientAddRequest");
 
+
         bool hasIngredientId = recipeIngredientAddRequest.IngredientID.HasValue;
         bool hasIngredientName = !string.IsNullOrWhiteSpace(recipeIngredientAddRequest.IngredientName);
-
         if (!hasIngredientId && !hasIngredientName)
             throw new ArgumentNullException(nameof(recipeIngredientAddRequest),
                 "Musisz podać IngredientID lub IngredientName.");
@@ -52,8 +62,9 @@ public class RecipeIngredientService : IRecipeIngredientService
             if (filteredIngredient is not null)
             {
                 recipeIngredientAddRequest.IngredientID = filteredIngredient?.ID;
-                
-            } else
+
+            }
+            else
             {
                 IngredientAddRequest ingredientToAdd = new()
                 {
@@ -61,7 +72,7 @@ public class RecipeIngredientService : IRecipeIngredientService
                 };
                 IngredientResponse? ingredientFromAdd = _ingredientService.AddIngredient(ingredientToAdd);
                 recipeIngredientAddRequest.IngredientID = ingredientFromAdd.ID;
-            }   
+            }
         }
 
         // jeśli podano nazwę (np. do walidacji czy nie ma konfliktu)

@@ -4,10 +4,10 @@ namespace RecipeApp.Application.Interfaces;
 
 public interface IIngredientService
 {
-    IngredientResponse? AddIngredient(IngredientAddRequest ingredientAddRequest);
-    IngredientResponse? GetIngredientByID(Guid? ingredientID);
-    List<IngredientResponse>? GetAllIngredients();
-    List<IngredientResponse>? GetFilteredIngredients(string? searchString);
-    IngredientResponse? UpdateIngredient(IngredientUpdateRequest ingredientUpdateRequest);
-    bool DeleteIngredient(Guid? ingredientID);
+    Task<IngredientResponse?> AddIngredient(IngredientAddRequest ingredientAddRequest);
+    Task<IngredientResponse?> GetIngredientByID(Guid? ingredientID);
+    Task<List<IngredientResponse?>> GetAllIngredients();
+    Task<List<IngredientResponse?>> GetFilteredIngredients(string? searchString);
+    Task<IngredientResponse?> UpdateIngredient(IngredientUpdateRequest ingredientUpdateRequest);
+    Task<bool> DeleteIngredient(Guid? ingredientID);
 }

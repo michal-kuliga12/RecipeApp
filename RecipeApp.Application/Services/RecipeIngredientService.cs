@@ -4,6 +4,7 @@ using RecipeApp.Application.DTOs.RecipeIngredientDTO;
 using RecipeApp.Application.Helpers;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Domain.Entities;
+using RecipeApp.Infrastructure;
 
 namespace RecipeApp.Application.Services;
 
@@ -11,14 +12,16 @@ public class RecipeIngredientService : IRecipeIngredientService
 {
     private readonly IRecipeService _recipeService;
     private readonly IIngredientService _ingredientService;
+    private readonly ApplicationDbContext _db;
 
-    public RecipeIngredientService(IRecipeService recipeService, IIngredientService ingredientService)
+    public RecipeIngredientService(IRecipeService recipeService, IIngredientService ingredientService, ApplicationDbContext db)
     {
         _recipeService = recipeService;
         _ingredientService = ingredientService;
+        _db = db;
     }
 
-    public RecipeResponse? AddRecipeIngredient(RecipeIngredientAddRequest recipeIngredientAddRequest)
+    public async Task<RecipeResponse>? AddRecipeIngredient(RecipeIngredientAddRequest recipeIngredientAddRequest)
     {
         if (recipeIngredientAddRequest is null)
             throw new ArgumentNullException("RecipeIngredientAddRequest nie może być null");
@@ -28,7 +31,7 @@ public class RecipeIngredientService : IRecipeIngredientService
         if (recipeID is null)
             throw new ArgumentNullException("RecipeID nie może być null");
 
-        Recipe? recipeFound = _recipeService.GetRecipeEntityByID(recipeID);
+        Recipe? recipeFound = await _recipeService.GetRecipeEntityByID(recipeID);
 
         if (recipeFound is null)
             return null;
@@ -56,9 +59,10 @@ public class RecipeIngredientService : IRecipeIngredientService
         if (!hasIngredientId)
         {
             string ingredientName = recipeIngredientAddRequest.IngredientName!;
-            IngredientResponse? filteredIngredient = _ingredientService
-                .GetFilteredIngredients(ingredientName)
+            var ingredients = await _ingredientService.GetFilteredIngredients(ingredientName);
+            IngredientResponse? filteredIngredient = ingredients
                 .FirstOrDefault(i => i.Name.Equals(ingredientName, StringComparison.InvariantCultureIgnoreCase));
+
             if (filteredIngredient is not null)
             {
                 recipeIngredientAddRequest.IngredientID = filteredIngredient?.ID;
@@ -70,7 +74,7 @@ public class RecipeIngredientService : IRecipeIngredientService
                 {
                     Name = ingredientName,
                 };
-                IngredientResponse? ingredientFromAdd = _ingredientService.AddIngredient(ingredientToAdd);
+                IngredientResponse? ingredientFromAdd = await _ingredientService.AddIngredient(ingredientToAdd);
                 recipeIngredientAddRequest.IngredientID = ingredientFromAdd.ID;
             }
         }
@@ -89,7 +93,7 @@ public class RecipeIngredientService : IRecipeIngredientService
         return recipeFound.ToRecipeResponse();
     }
 
-    public RecipeResponse? UpdateRecipeIngredient(RecipeIngredientUpdateRequest recipeIngredientUpdateRequest)
+    public async Task<RecipeResponse>? UpdateRecipeIngredient(RecipeIngredientUpdateRequest recipeIngredientUpdateRequest)
     {
         if (recipeIngredientUpdateRequest is null)
             throw new ArgumentNullException("RecipeIngredientUpdateRequest nie może być null");
@@ -99,12 +103,12 @@ public class RecipeIngredientService : IRecipeIngredientService
             throw new ArgumentException("Wprowadzono niepoprawne dane");
 
         Guid? ingredientID = recipeIngredientUpdateRequest.IngredientID;
-        IngredientResponse? ingredientFound = _ingredientService.GetIngredientByID(ingredientID);
+        IngredientResponse? ingredientFound = await _ingredientService.GetIngredientByID(ingredientID);
         if (ingredientFound is null)
             throw new InvalidOperationException("Podany przepis nie istnieje w bazie danych");
 
         Guid? recipeID = recipeIngredientUpdateRequest.RecipeID;
-        Recipe? recipeFound = _recipeService.GetRecipeEntityByID(recipeID);
+        Recipe? recipeFound = await _recipeService.GetRecipeEntityByID(recipeID);
         if (recipeFound is null)
             throw new InvalidOperationException("Podany przepis nie istnieje w bazie danych");
 
@@ -114,11 +118,13 @@ public class RecipeIngredientService : IRecipeIngredientService
 
         recipeIngredientToModify.Quantity = recipeIngredientUpdateRequest.Quantity.Value!;
         recipeIngredientToModify.Unit = recipeIngredientUpdateRequest.Unit.Value!;
+        await _db.SaveChangesAsync();
+
 
         return recipeFound.ToRecipeResponse();
     }
 
-    public bool DeleteRecipeIngredient(Guid? recipeIngredientID)
+    public async Task<bool> DeleteRecipeIngredient(Guid? recipeIngredientID)
     {
         throw new NotImplementedException("Metoda zostanie dodana po implementacji repozytoriów");
     }

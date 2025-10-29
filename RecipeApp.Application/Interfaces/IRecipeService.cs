@@ -1,17 +1,16 @@
 ﻿using RecipeApp.Application.DTOs.RecipeDTO;
-using RecipeApp.Application.DTOs.RecipeIngredientDTO;
 using RecipeApp.Domain.Entities;
 
 namespace RecipeApp.Application.Interfaces;
 
 public interface IRecipeService
 {
-    RecipeResponse? AddRecipe(RecipeAddRequest? recipeAddRequest);
-    RecipeResponse? GetRecipeByID(Guid? recipeID);
-    List<RecipeResponse>? GetAllRecipes();
-    List<RecipeResponse>? GetFilteredRecipes(string searchBy, string? searchString);
-    List<RecipeResponse>? GetSortedRecipes(List<RecipeResponse> recipeList, string sortBy, bool ascending = true);
-    RecipeResponse? UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest);
-    bool DeleteRecipe(Guid? recipeID);
-    Recipe? GetRecipeEntityByID(Guid? recipeID);
+    Task<RecipeResponse?> AddRecipe(RecipeAddRequest? recipeAddRequest);
+    Task<RecipeResponse?> GetRecipeByID(Guid? recipeID);
+    Task<List<RecipeResponse?>> GetAllRecipes();
+    Task<List<RecipeResponse?>> GetFilteredRecipes(string seachBy, string? seachString);
+    Task<List<RecipeResponse?>> GetSortedRecipes(List<RecipeResponse?> recipeList, string sortBy, bool ascending = true);
+    Task<RecipeResponse?> UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest);
+    Task<bool> DeleteRecipe(Guid? recipeID);
+    Task<Recipe?> GetRecipeEntityByID(Guid? recipeID);
 }

@@ -1,26 +1,21 @@
-﻿using RecipeApp.Application.DTOs.IngredientDTO;
+﻿using Microsoft.EntityFrameworkCore;
+using RecipeApp.Application.DTOs.IngredientDTO;
 using RecipeApp.Application.Helpers;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Domain.Entities;
+using RecipeApp.Infrastructure;
 
 namespace RecipeApp.Application.Services
 {
     public class IngredientService : IIngredientService
     {
-        private readonly List<Ingredient> _ingredients;
-        public IngredientService(bool initialize = true)
+        private readonly ApplicationDbContext _db;
+        public IngredientService(ApplicationDbContext db)
         {
-            _ingredients = new List<Ingredient>() { };
-
-            if (initialize = true && !_ingredients.Any())
-            {
-                AddIngredient(new IngredientAddRequest { Name = "Pomidor" });
-                AddIngredient(new IngredientAddRequest { Name = "Ogórek" });
-                AddIngredient(new IngredientAddRequest { Name = "Makaron" });
-            }
+            _db = db;
         }
 
-        public IngredientResponse? AddIngredient(IngredientAddRequest ingredientAddRequest)
+        public async Task<IngredientResponse>? AddIngredient(IngredientAddRequest ingredientAddRequest)
         {
             if (ingredientAddRequest == null)
                 throw new ArgumentNullException("IngredientAddRequest nie może być null");
@@ -33,44 +28,51 @@ namespace RecipeApp.Application.Services
             Ingredient ingredientToAdd = ingredientAddRequest.ToIngredient();
             ingredientToAdd.ID = Guid.NewGuid();
 
-            _ingredients.Add(ingredientToAdd);
+            _db.Ingredients.Add(ingredientToAdd);
+            await _db.SaveChangesAsync();
 
             return ingredientToAdd.ToIngredientResponse();
         }
 
-        public bool DeleteIngredient(Guid? ingredientID)
+        public async Task<bool> DeleteIngredient(Guid? ingredientID)
         {
             if (ingredientID is null)
                 throw new ArgumentNullException("IngredientID nie może być null");
 
-            Ingredient? ingredientToDelete = _ingredients.SingleOrDefault(i => i.ID == ingredientID);
+            Ingredient? ingredientToDelete = await _db.Ingredients.SingleOrDefaultAsync(i => i.ID == ingredientID);
 
             if (ingredientToDelete is null)
                 return false;
 
+            _db.Ingredients.Remove(ingredientToDelete);
+            await _db.SaveChangesAsync();
+
             return true;
         }
 
-        public List<IngredientResponse>? GetAllIngredients()
-            => _ingredients.Select(i => i.ToIngredientResponse()).ToList();
-
-        public List<IngredientResponse>? GetFilteredIngredients(string? searchString)
+        public async Task<List<IngredientResponse>>? GetAllIngredients()
         {
-            if (searchString is null || searchString == String.Empty)
-                return _ingredients.Select(i => i.ToIngredientResponse()).ToList();
+            var ingredients = await _db.Ingredients.ToListAsync();
+            return ingredients.Select(i => i.ToIngredientResponse()).ToList();
+        }
 
-            return _ingredients
+        public async Task<List<IngredientResponse>>? GetFilteredIngredients(string? searchString)
+        {
+            var ingredients = await GetAllIngredients();
+            if (searchString is null || searchString == String.Empty)
+                return ingredients.ToList();
+
+            return ingredients
                 .Where(i => i.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                .Select(i => i.ToIngredientResponse())
                 .ToList();
         }
 
-        public IngredientResponse? GetIngredientByID(Guid? ingredientID)
+        public async Task<IngredientResponse>? GetIngredientByID(Guid? ingredientID)
         {
             if (ingredientID is null)
                 throw new ArgumentNullException("IngredientID nie może być null");
 
-            Ingredient? ingredientFound = _ingredients.SingleOrDefault(i => i.ID == ingredientID);
+            Ingredient? ingredientFound = await _db.Ingredients.SingleOrDefaultAsync(i => i.ID == ingredientID);
 
             if (ingredientFound is null)
                 return null;
@@ -78,7 +80,7 @@ namespace RecipeApp.Application.Services
             return ingredientFound.ToIngredientResponse();
         }
 
-        public IngredientResponse? UpdateIngredient(IngredientUpdateRequest ingredientUpdateRequest)
+        public async Task<IngredientResponse>? UpdateIngredient(IngredientUpdateRequest ingredientUpdateRequest)
         {
             if (ingredientUpdateRequest is null || ingredientUpdateRequest.ID is null)
                 throw new ArgumentNullException(nameof(ingredientUpdateRequest), "ingredientUpdateRequest nie może być null");
@@ -88,12 +90,13 @@ namespace RecipeApp.Application.Services
             if (!isValid)
                 throw new ArgumentException($"Obiekt ingredientUpdateRequest jest niepoprawny");
 
-            Ingredient? ingredientFound = _ingredients.SingleOrDefault(i => i.ID == ingredientUpdateRequest.ID);
+            Ingredient? ingredientFound = await _db.Ingredients.SingleOrDefaultAsync(i => i.ID == ingredientUpdateRequest.ID);
 
             if (ingredientFound is null)
                 throw new ArgumentException($"Nie znaleziono składnika o ID:{ingredientUpdateRequest.ID}");
 
             ingredientFound.Name = ingredientUpdateRequest.Name;
+            await _db.SaveChangesAsync();
             return ingredientFound.ToIngredientResponse();
         }
     }

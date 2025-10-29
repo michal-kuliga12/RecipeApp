@@ -1,37 +1,22 @@
-﻿
+﻿using Microsoft.EntityFrameworkCore;
 using RecipeApp.Application.DTOs.RecipeDTO;
-using RecipeApp.Application.DTOs.RecipeIngredientDTO;
 using RecipeApp.Application.Helpers;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Domain.Entities;
-using RecipeApp.Domain.Enums;
+using RecipeApp.Infrastructure;
 
 namespace RecipeApp.Application.Services;
 
 public class RecipeService : IRecipeService
 {
-    private readonly List<Recipe> _recipes;
+    private readonly ApplicationDbContext _db;
 
-    public RecipeService(bool initialize = true)
+    public RecipeService(ApplicationDbContext db)
     {
-        _recipes = new List<Recipe>();
-        
-        if (initialize && !_recipes.Any())
-        {
-            AddRecipe(new RecipeAddRequest { Name = "Burger Classic", Description = "Soczysty burger z serem, sałatą i pomidorem", Author = "Anna Kowalska", Category = Category.MainCourse, PreparationTime = 20, RecipeIngredients = new List<Domain.Entities.RecipeIngredient> { }, Servings = 2, Rating = 4.5, ImageUrl = "https://foodish-api.com/images/burger/burger19.jpg", CreatedAt = DateTime.Now.AddDays(-10) });
-            AddRecipe(new RecipeAddRequest { Name = "Pizza Margherita", Description = "Klasyczna pizza z sosem pomidorowym i mozzarellą", Author = "Jan Nowak", Category = Category.MainCourse, PreparationTime = 25, RecipeIngredients = new List<Domain.Entities.RecipeIngredient> { }, Servings = 4, Rating = 4.8, ImageUrl = "https://foodish-api.com/images/pizza/pizza66.jpg", CreatedAt = DateTime.Now.AddDays(-5) });
-            AddRecipe(new RecipeAddRequest { Name = "Spaghetti Bolognese", Description = "Makaron z sosem mięsnym i pomidorami", Author = "Maria Zielińska", Category = Category.MainCourse, PreparationTime = 35, RecipeIngredients = new List<Domain.Entities.RecipeIngredient> { }, Servings = 3, Rating = 4.2, ImageUrl = "https://foodish-api.com/images/pasta/pasta14.jpg", CreatedAt = DateTime.Now.AddDays(-20) });
-            AddRecipe(new RecipeAddRequest { Name = "Tort Czekoladowy", Description = "Wilgotny tort czekoladowy z kremem", Author = "Katarzyna Wiśniewska", Category = Category.PastriesAndDesserts, PreparationTime = 60, RecipeIngredients = new List<Domain.Entities.RecipeIngredient> { }, Servings = 8, Rating = 4.9, ImageUrl = "https://foodish-api.com/images/dessert/dessert12.jpg", CreatedAt = DateTime.Now.AddDays(-2) });
-            AddRecipe(new RecipeAddRequest { Name = "Sałatka Grecka", Description = "Sałatka z pomidorów, ogórka, sera feta i oliwek", Author = "Piotr Nowicki", Category = Category.Salads, PreparationTime = 15, RecipeIngredients = new List<Domain.Entities.RecipeIngredient> { }, Servings = 2, Rating = 4.0, ImageUrl = "https://foodish-api.com/images/pasta/pasta24.jpg", CreatedAt = DateTime.Now.AddDays(-7) });
-            AddRecipe(new RecipeAddRequest { Name = "Samosa Pikantna", Description = "Pikantna przekąska z ziemniakami i groszkiem", Author = "Agnieszka Bąk", Category = Category.Snacks, PreparationTime = 30, RecipeIngredients = new List<Domain.Entities.RecipeIngredient> { }, Servings = 6, Rating = 4.3, ImageUrl = "https://foodish-api.com/images/samosa/samosa16.jpg", CreatedAt = DateTime.Now.AddDays(-12) });
-            AddRecipe(new RecipeAddRequest { Name = "Curry Z Kurczakiem", Description = "Aromatyczne curry z kurczakiem i warzywami", Author = "Łukasz Szymański", Category = Category.MainCourse, PreparationTime = 40, RecipeIngredients = new List<Domain.Entities.RecipeIngredient> { }, Servings = 4, Rating = 4.6, ImageUrl = "https://foodish-api.com/images/biryani/biryani32.jpg", CreatedAt = DateTime.Now.AddDays(-18) });
-            AddRecipe(new RecipeAddRequest { Name = "Dosa", Description = "Cienkie placki ryżowo-soczewicowe z farszem", Author = "Sunita Patel", Category = Category.MainCourse, PreparationTime = 20, RecipeIngredients = new List<Domain.Entities.RecipeIngredient> { }, Servings = 3, Rating = 4.4, ImageUrl = "https://foodish-api.com/images/dosa/dosa31.jpg", CreatedAt = DateTime.Now.AddDays(-8) });
-            AddRecipe(new RecipeAddRequest { Name = "Lody Waniliowe", Description = "Kremowe lody waniliowe z bitą śmietaną", Author = "Elżbieta Kowal", Category = Category.PastriesAndDesserts, PreparationTime = 10, RecipeIngredients = new List<Domain.Entities.RecipeIngredient> { }, Servings = 4, Rating = 4.7, ImageUrl = "https://foodish-api.com/images/dessert/dessert25.jpg", CreatedAt = DateTime.Now.AddDays(-1) });
-            AddRecipe(new RecipeAddRequest { Name = "Butter Chicken", Description = "Indyjski kurczak w maślanym sosie pomidorowym", Author = "Ravi Singh", Category = Category.MainCourse, PreparationTime = 50, RecipeIngredients = new List<Domain.Entities.RecipeIngredient> { }, Servings = 4, Rating = 4.8, ImageUrl = "https://foodish-api.com/images/butter-chicken/butter-chicken8.jpg", CreatedAt = DateTime.Now.AddDays(-15) });
-        }
+        _db = db;
     }
 
-    public RecipeResponse AddRecipe(RecipeAddRequest? recipeAddRequest)
+    public async Task<RecipeResponse> AddRecipe(RecipeAddRequest? recipeAddRequest)
     {
         if (recipeAddRequest is null)
             throw new ArgumentNullException("RecipeAddRequest nie może być null");
@@ -43,29 +28,35 @@ public class RecipeService : IRecipeService
 
         Recipe recipe = recipeAddRequest.ToRecipe();
         recipe.ID = Guid.NewGuid();
-        _recipes.Add(recipe);
+
+        _db.Recipes.Add(recipe);
+        await _db.SaveChangesAsync();
+
         RecipeResponse recipeResponse = recipe.ToRecipeResponse();
 
         return recipeResponse;
 
     }
-    public RecipeResponse? GetRecipeByID(Guid? recipeID)
+    public async Task<RecipeResponse?> GetRecipeByID(Guid? recipeID)
     {
         if (recipeID == null)
             return null;
 
-        Recipe? recipeFound = _recipes.SingleOrDefault(temp => temp.ID == recipeID);
+        Recipe? recipeFound = await _db.Recipes.SingleOrDefaultAsync(temp => temp.ID == recipeID);
 
         if (recipeFound == null)
             return null;
 
         return recipeFound.ToRecipeResponse();
     }
-    public List<RecipeResponse>? GetAllRecipes()
-    => _recipes.Select(temp => temp.ToRecipeResponse()).ToList();
-    public List<RecipeResponse>? GetFilteredRecipes(string searchBy, string? searchString)
+    public async Task<List<RecipeResponse>?> GetAllRecipes()
     {
-        List<RecipeResponse> allRecipes = GetAllRecipes();
+        var recipes = await _db.Recipes.ToListAsync();
+        return recipes.Select(temp => temp.ToRecipeResponse()).ToList();
+    }
+    public async Task<List<RecipeResponse>?> GetFilteredRecipes(string searchBy, string? searchString)
+    {
+        List<RecipeResponse> allRecipes = await GetAllRecipes();
         List<RecipeResponse> filteredRecipes = allRecipes;
 
         if (string.IsNullOrEmpty(searchBy) || string.IsNullOrEmpty(searchString))
@@ -111,7 +102,7 @@ public class RecipeService : IRecipeService
         }
         return filteredRecipes;
     }
-    public List<RecipeResponse>? GetSortedRecipes(List<RecipeResponse> recipeList, string sortBy, bool ascending = true)
+    public async Task<List<RecipeResponse>?> GetSortedRecipes(List<RecipeResponse> recipeList, string sortBy, bool ascending = true)
     {
         if (recipeList == null)
             throw new ArgumentNullException("Lista przepisów do sortowania nie może być null");
@@ -142,7 +133,7 @@ public class RecipeService : IRecipeService
 
         return sortedRecipes;
     }
-    public RecipeResponse UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest)
+    public async Task<RecipeResponse?> UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest)
     {
         if (recipeUpdateRequest is null)
             throw new ArgumentNullException("RecipeUpdateRequest nie może być null");
@@ -152,7 +143,7 @@ public class RecipeService : IRecipeService
         if (!isModelValid)
             throw new ArgumentNullException("Model jest niepoprawny");
 
-        Recipe? recipeFound = _recipes.SingleOrDefault(temp => temp.ID == recipeUpdateRequest.ID);
+        Recipe? recipeFound = await _db.Recipes.SingleOrDefaultAsync(temp => temp.ID == recipeUpdateRequest.ID);
 
         if (recipeFound is null)
             return null;
@@ -167,26 +158,34 @@ public class RecipeService : IRecipeService
         recipeFound.Rating = recipeUpdateRequest.Rating;
         recipeFound.ImageUrl = recipeUpdateRequest.ImageUrl;
 
+        await _db.SaveChangesAsync();
+
         return recipeFound.ToRecipeResponse();
     }
-    public bool DeleteRecipe(Guid? recipeID)
+    public async Task<bool> DeleteRecipe(Guid? recipeID)
     {
         if (recipeID is null)
             throw new ArgumentNullException("RecipeID nie może być null");
 
-        Recipe? recipeToDelete = _recipes.SingleOrDefault(temp => temp.ID == recipeID);
+        Recipe? recipeToDelete = await _db.Recipes.SingleOrDefaultAsync(temp => temp.ID == recipeID);
 
         if (recipeToDelete == null)
             return false;
 
-        _recipes.Remove(recipeToDelete);
+        _db.Recipes.Remove(recipeToDelete);
+        await _db.SaveChangesAsync();
+
         return true;
     }
-    public Recipe? GetRecipeEntityByID(Guid? recipeID)
+    public async Task<Recipe?> GetRecipeEntityByID(Guid? recipeID)
     {
         if (recipeID == null)
             return null;
-        Recipe? recipeFound = _recipes.SingleOrDefault(temp => temp.ID == recipeID);
+        Recipe? recipeFound = await _db.Recipes.SingleOrDefaultAsync(temp => temp.ID == recipeID);
+
+        if (recipeFound is null)
+            return null;
+
         return recipeFound;
     }
 }

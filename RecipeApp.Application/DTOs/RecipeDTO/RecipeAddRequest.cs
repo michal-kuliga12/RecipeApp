@@ -24,7 +24,7 @@ public class RecipeAddRequest
     public int Servings { get; set; } = 1;
     [Range(0.0, 5.0, ErrorMessage = "Ocena musi być w zakresie od 0 do 5")]
     public double Rating { get; set; }
-    [Url(ErrorMessage = "Niepoprawny adres URL obrazu")]
+    [StringLength(100, ErrorMessage = "Url jest za długi")]
     public string? ImageUrl { get; set; }
     [Required(ErrorMessage = "Data utworzenia jest wymagana")]
     [DataType(DataType.DateTime)]

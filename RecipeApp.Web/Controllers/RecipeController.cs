@@ -16,16 +16,16 @@ public class RecipeController : Controller
 
     [Route("/")]
     [Route("[action]")]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        List<RecipeResponse>? recipes = _recipeService.GetAllRecipes();
+        List<RecipeResponse>? recipes = await _recipeService.GetAllRecipes();
         return View(recipes);
     }
 
     [Route("[action]/{id:Guid}")]
-    public IActionResult Details(Guid id)
+    public async Task<IActionResult> Details(Guid id)
     {
-        RecipeResponse? recipe = _recipeService.GetRecipeByID(id);
+        RecipeResponse? recipe = await _recipeService.GetRecipeByID(id);
         if (recipe == null)
             return NotFound("Nie znaleziono przepisu o danym ID");
 

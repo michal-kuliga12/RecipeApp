@@ -1,0 +1,67 @@
+[
+    {
+        "ID": "a6c1e7e1-7d43-4b45-9f8e-2b74b3a0f1d2",
+        "Name": "Naleśniki klasyczne",
+        "Description": "Tradycyjne cienkie naleśniki z mąki, mleka i jajek, idealne do słodkich dodatków.",
+        "Author": "Jan Kowalski",
+        "Category": "Breakfast",
+        "PreparationTime": 20,
+        "RecipeIngredients": [],
+        "Servings": 4,
+        "Rating": 4.5,
+        "ImageUrl": "https://cdn.pixabay.com/photo/2016/10/25/12/28/pancakes-1763756_1280.jpg",
+        "CreatedAt": "2025-10-25T10:00:00Z"
+    },
+    {
+        "ID": "d2c8e8ac-054d-48b7-a893-98c1b49f7c21",
+        "Name": "Zupa krem z dyni",
+        "Description": "Aksamitna zupa z pieczonej dyni, z dodatkiem imbiru i śmietanki.",
+        "Author": "Anna Nowak",
+        "Category": "Soups",
+        "PreparationTime": 45,
+        "RecipeIngredients": [],
+        "Servings": 3,
+        "Rating": 4.8,
+        "ImageUrl": "https://cdn.pixabay.com/photo/2017/10/24/23/12/pumpkin-soup-2885151_1280.jpg",
+        "CreatedAt": "2025-10-25T10:10:00Z"
+    },
+    {
+        "ID": "c4f5b3e4-bc11-42d1-8e5f-4fd8a788fa6e",
+        "Name": "Spaghetti aglio e olio",
+        "Description": "Klasyczne włoskie danie z makaronu, oliwy, czosnku i chili.",
+        "Author": "Luca Rossi",
+        "Category": "MainCourse",
+        "PreparationTime": 25,
+        "RecipeIngredients": [],
+        "Servings": 2,
+        "Rating": 4.7,
+        "ImageUrl": "https://cdn.pixabay.com/photo/2017/07/16/10/43/spaghetti-2508184_1280.jpg",
+        "CreatedAt": "2025-10-25T10:20:00Z"
+    },
+    {
+        "ID": "b7125d3f-7f6d-4ac4-9f9e-98e022bca3f4",
+        "Name": "Sałatka grecka",
+        "Description": "Świeża sałatka z pomidorami, ogórkiem, serem feta i oliwkami.",
+        "Author": "Maria Papadopoulos",
+        "Category": "Salads",
+        "PreparationTime": 15,
+        "RecipeIngredients": [],
+        "Servings": 2,
+        "Rating": 4.6,
+        "ImageUrl": "https://cdn.pixabay.com/photo/2017/06/05/17/29/salad-2380329_1280.jpg",
+        "CreatedAt": "2025-10-25T10:30:00Z"
+    },
+    {
+        "ID": "e32dbe67-cb17-4962-bc9d-b3bb3c1f10af",
+        "Name": "Brownie czekoladowe",
+        "Description": "Intensywnie czekoladowe, wilgotne brownie z chrupiącą skórką.",
+        "Author": "Julia Nowak",
+        "Category": "PastriesAndDesserts",
+        "PreparationTime": 50,
+        "RecipeIngredients": [],
+        "Servings": 6,
+        "Rating": 4.9,
+        "ImageUrl": "https://cdn.pixabay.com/photo/2018/06/09/16/00/brownie-3461511_1280.jpg",
+        "CreatedAt": "2025-10-25T10:40:00Z"
+    }
+]

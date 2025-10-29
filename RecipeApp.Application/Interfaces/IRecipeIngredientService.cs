@@ -5,7 +5,7 @@ namespace RecipeApp.Application.Interfaces;
 
 public interface IRecipeIngredientService
 {
-    RecipeResponse? AddRecipeIngredient(RecipeIngredientAddRequest recipeIngredientAddRequest);
-    RecipeResponse? UpdateRecipeIngredient(RecipeIngredientUpdateRequest recipeIngredientUpdateRequest);
-    bool DeleteRecipeIngredient(Guid? recipeIngredientID);
+    Task<RecipeResponse?> AddRecipeIngredient(RecipeIngredientAddRequest recipeIngredientAddRequest);
+    Task<RecipeResponse?> UpdateRecipeIngredient(RecipeIngredientUpdateRequest recipeIngredientUpdateRequest);
+    Task<bool> DeleteRecipeIngredient(Guid? recipeIngredientID);
 }

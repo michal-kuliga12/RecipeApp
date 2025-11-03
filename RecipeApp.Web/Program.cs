@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Application.Services;
 using RecipeApp.Infrastructure;
+using RecipeApp.Infrastructure.Repositories;
 
 namespace CookBookApp
 {
@@ -12,6 +13,7 @@ namespace CookBookApp
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddControllersWithViews();
 
+            builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));

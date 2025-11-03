@@ -2,6 +2,7 @@
 using AutoFixture;
 using EntityFrameworkCoreMock;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using RecipeApp.Application.DTOs.IngredientDTO;
 using RecipeApp.Application.DTOs.RecipeDTO;
 using RecipeApp.Application.DTOs.RecipeIngredientDTO;
@@ -11,6 +12,7 @@ using RecipeApp.Application.Services;
 using RecipeApp.Domain.Entities;
 using RecipeApp.Domain.Enums;
 using RecipeApp.Infrastructure;
+using RecipeApp.Infrastructure.Repositories;
 using RecipeApp.Tests.Helpers;
 
 namespace RecipeApp.Tests;
@@ -21,10 +23,16 @@ public class RecipeServiceTests
     private readonly IIngredientService _ingredientService;
     private readonly IRecipeIngredientService _recipeIngredientService;
     private readonly IFixture _fixture;
+    private readonly Mock<IRecipeRepository> _recipeRepositoryMock;
+    private readonly IRecipeRepository _recipeRepository;
+
     private readonly ApplicationDbContext _dbContext;
 
     public RecipeServiceTests()
     {
+        _recipeRepositoryMock = new Mock<IRecipeRepository>();
+        _recipeRepository = _recipeRepositoryMock.Object;
+
         List<Recipe>? recipesInitialData = JsonReaderHelper<Recipe>.GetJsonData("recipes");
         List<Ingredient>? ingredientsInitialData = JsonReaderHelper<Ingredient>.GetJsonData("ingredients");
         List<RecipeIngredient> recipeIngredientsInitialData = new List<RecipeIngredient>() { };
@@ -48,7 +56,7 @@ public class RecipeServiceTests
         dbContextMock.CreateDbSetMock(temp => temp.Ingredients, ingredientsInitialData);
 
 
-        _recipeService = new RecipeService(_dbContext);
+        _recipeService = new RecipeService(_recipeRepository);
         _ingredientService = new IngredientService(_dbContext);
         _recipeIngredientService = new RecipeIngredientService(_recipeService, _ingredientService, _dbContext);
     }
@@ -81,11 +89,28 @@ public class RecipeServiceTests
     {
         RecipeAddRequest recipeRequestToAdd = _fixture.Create<RecipeAddRequest>();
 
+        _recipeRepositoryMock.Setup(r => r.AddRecipe(It.IsAny<Recipe>()))
+            .ReturnsAsync((Recipe req) =>
+            {
+                return new Recipe
+                {
+                    ID = Guid.NewGuid(),
+                    Name = req.Name,
+                    Description = req.Description,
+                    Author = req.Author,
+                    Category = req.Category,
+                    PreparationTime = req.PreparationTime,
+                    Servings = req.Servings,
+                    Rating = req.Rating,
+                    ImageUrl = req.ImageUrl,
+                    CreatedAt = req.CreatedAt,
+                    RecipeIngredients = req.RecipeIngredients
+                };
+            });
+
         RecipeResponse? recipeResponseFromAdd = await _recipeService.AddRecipe(recipeRequestToAdd);
-        List<RecipeResponse>? recipesFromGetAll = await _recipeService.GetAllRecipes();
 
         Assert.True(recipeResponseFromAdd.ID != Guid.Empty);
-        Assert.Contains(recipeResponseFromAdd, recipesFromGetAll);
     }
 
     [Fact]
@@ -100,11 +125,28 @@ public class RecipeServiceTests
             .With(x => x.RecipeIngredients, new List<RecipeIngredient> { new() { ID = Guid.NewGuid(), RecipeID = Guid.NewGuid(), IngredientID = Guid.NewGuid(), Quantity = 400, Unit = Unit.Gram } })
             .Create();
 
+        _recipeRepositoryMock.Setup(r => r.AddRecipe(It.IsAny<Recipe>()))
+    .ReturnsAsync((Recipe req) =>
+    {
+        return new Recipe
+        {
+            ID = Guid.NewGuid(),
+            Name = req.Name,
+            Description = req.Description,
+            Author = req.Author,
+            Category = req.Category,
+            PreparationTime = req.PreparationTime,
+            Servings = req.Servings,
+            Rating = req.Rating,
+            ImageUrl = req.ImageUrl,
+            CreatedAt = req.CreatedAt,
+            RecipeIngredients = req.RecipeIngredients
+        };
+    });
+
         RecipeResponse recipeResponseFromAdd = await _recipeService.AddRecipe(recipeRequestToAdd);
-        List<RecipeResponse> recipesFromGetAll = await _recipeService.GetAllRecipes();
 
         Assert.True(recipeResponseFromAdd.ID != Guid.Empty);
-        Assert.Contains(recipeResponseFromAdd, recipesFromGetAll);
     }
     #endregion
     #region GetRecipeByID()
@@ -112,6 +154,10 @@ public class RecipeServiceTests
     public async Task GetRecipeByID_NullID()
     {
         Guid? invalidRecipeID = null;
+
+        _recipeRepositoryMock.Setup(r => r.GetRecipeByID(It.IsAny<Guid>()))
+            .ReturnsAsync((Recipe?)null);
+
         RecipeResponse? recipeFromGetByID = await _recipeService.GetRecipeByID(invalidRecipeID);
 
         Assert.Null(recipeFromGetByID);
@@ -121,6 +167,10 @@ public class RecipeServiceTests
     public async Task GetRecipeByID_ValidID_RecipeNotFound()
     {
         Guid? invalidRecipeID = Guid.NewGuid();
+
+        _recipeRepositoryMock.Setup(r => r.GetRecipeByID(It.IsAny<Guid>()))
+            .ReturnsAsync((Recipe?)null);
+
         RecipeResponse? recipeFromGetByID = await _recipeService.GetRecipeByID(invalidRecipeID);
 
         Assert.Null(recipeFromGetByID);
@@ -129,14 +179,18 @@ public class RecipeServiceTests
     [Fact]
     public async Task GetRecipeByID_ValidID_RecipeFound()
     {
-        List<RecipeResponse>? allRecipes = await _recipeService.GetAllRecipes();
-        RecipeResponse recipeResponseFromAdd = allRecipes.First();
-        Guid? validRecipeID = recipeResponseFromAdd.ID;
+        Guid? validRecipeID = Guid.NewGuid();
+        Recipe validRecipe = _fixture.Build<Recipe>()
+            .With(x => x.ID, validRecipeID.Value)
+            .Create();
+
+        _recipeRepositoryMock.Setup(r => r.GetRecipeByID(It.IsAny<Guid>()))
+            .ReturnsAsync(validRecipe);
 
         RecipeResponse? recipeFromGetByID = await _recipeService.GetRecipeByID(validRecipeID);
-
+        
         Assert.NotNull(recipeFromGetByID);
-        Assert.Equal(recipeFromGetByID.ID, validRecipeID);
+        Assert.Equal(validRecipe.ToRecipeResponse(), recipeFromGetByID);
     }
 
     #endregion

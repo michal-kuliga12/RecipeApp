@@ -30,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RecipeApp.API\RecipeApp.API.csproj" />
     <ProjectReference Include="..\RecipeApp.Application\RecipeApp.Application.csproj" />
   </ItemGroup>
 

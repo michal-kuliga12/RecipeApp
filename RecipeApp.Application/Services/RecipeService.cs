@@ -1,9 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using RecipeApp.Application.DTOs.RecipeDTO;
+﻿using RecipeApp.Application.DTOs.RecipeDTO;
 using RecipeApp.Application.Helpers;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Domain.Entities;
-using RecipeApp.Infrastructure;
 using RecipeApp.Infrastructure.Repositories;
 
 namespace RecipeApp.Application.Services;
@@ -17,7 +15,7 @@ public class RecipeService : IRecipeService
         _recipeRepository = recipeRepository;
     }
 
-    public async Task<RecipeResponse> AddRecipe(RecipeAddRequest? recipeAddRequest)
+    public async Task<RecipeResponse?> AddRecipe(RecipeAddRequest? recipeAddRequest)
     {
         if (recipeAddRequest is null)
             throw new ArgumentNullException("RecipeAddRequest nie może być null");

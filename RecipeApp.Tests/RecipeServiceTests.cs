@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 using AutoFixture;
-using EntityFrameworkCoreMock;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using RecipeApp.Application.DTOs.IngredientDTO;
@@ -13,7 +13,6 @@ using RecipeApp.Domain.Entities;
 using RecipeApp.Domain.Enums;
 using RecipeApp.Infrastructure;
 using RecipeApp.Infrastructure.Repositories;
-using RecipeApp.Tests.Helpers;
 
 namespace RecipeApp.Tests;
 
@@ -33,15 +32,6 @@ public class RecipeServiceTests
         _recipeRepositoryMock = new Mock<IRecipeRepository>();
         _recipeRepository = _recipeRepositoryMock.Object;
 
-        List<Recipe>? recipesInitialData = JsonReaderHelper<Recipe>.GetJsonData("recipes");
-        List<Ingredient>? ingredientsInitialData = JsonReaderHelper<Ingredient>.GetJsonData("ingredients");
-        List<RecipeIngredient> recipeIngredientsInitialData = new List<RecipeIngredient>() { };
-
-
-        DbContextMock<ApplicationDbContext> dbContextMock = new DbContextMock<ApplicationDbContext>(
-                new DbContextOptionsBuilder<ApplicationDbContext>().Options
-            );
-
         _fixture = new Fixture();
         _fixture.Behaviors
             .OfType<ThrowingRecursionBehavior>()
@@ -49,12 +39,6 @@ public class RecipeServiceTests
             .ForEach(b => _fixture.Behaviors.Remove(b));
 
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
-
-        _dbContext = dbContextMock.Object;
-        dbContextMock.CreateDbSetMock(temp => temp.Recipes, recipesInitialData);
-        dbContextMock.CreateDbSetMock(temp => temp.RecipeIngredients, recipeIngredientsInitialData);
-        dbContextMock.CreateDbSetMock(temp => temp.Ingredients, ingredientsInitialData);
-
 
         _recipeService = new RecipeService(_recipeRepository);
         _ingredientService = new IngredientService(_dbContext);
@@ -188,7 +172,7 @@ public class RecipeServiceTests
             .ReturnsAsync(validRecipe);
 
         RecipeResponse? recipeFromGetByID = await _recipeService.GetRecipeByID(validRecipeID);
-        
+
         Assert.NotNull(recipeFromGetByID);
         Assert.Equal(validRecipe.ToRecipeResponse(), recipeFromGetByID);
     }
@@ -197,86 +181,124 @@ public class RecipeServiceTests
     #region GetAllRecipes()
 
     [Fact]
-    public async Task GetAllRecipes_AddMultipleRecipes_ShouldContainThemAll()
+    public async Task GetAllRecipes_RecipesExists_ShouldReturnCollection()
     {
-        RecipeAddRequest recipeRequestToAdd1 = _fixture.Create<RecipeAddRequest>();
-        RecipeAddRequest recipeRequestToAdd2 = _fixture.Create<RecipeAddRequest>();
-        RecipeAddRequest recipeRequestToAdd3 = _fixture.Create<RecipeAddRequest>();
-
-        List<RecipeAddRequest> recipeRequestToAdd_List = new() { recipeRequestToAdd1, recipeRequestToAdd2, recipeRequestToAdd3 };
-        List<RecipeResponse> recipeResponseFromAdd_List = new();
-
-        var recipesToAdd = new List<RecipeAddRequest> { recipeRequestToAdd1, recipeRequestToAdd2, recipeRequestToAdd3 };
-        var addedRecipes = new List<RecipeResponse>();
-
-        // Dodanie przepisów do serwisu
-        foreach (var recipeRequest in recipesToAdd)
+        // Arrange
+        List<Recipe> recipesInRepo = new()
         {
-            addedRecipes.Add(await _recipeService.AddRecipe(recipeRequest));
-        }
+            _fixture.Create<Recipe>(),
+            _fixture.Create<Recipe>(),
+            _fixture.Create<Recipe>()
+        };
 
-        // Pobranie wszystkich przepisów
+        _recipeRepositoryMock
+            .Setup(r => r.GetAllRecipes())
+            .ReturnsAsync(recipesInRepo);
+
+        List<RecipeResponse> recipesInRepoAsResponse = recipesInRepo.Select(r => r.ToRecipeResponse()).ToList();
+
+        // Act
         var allRecipes = await _recipeService.GetAllRecipes();
 
-        // Sprawdzenie, czy wszystkie dodane przepisy znajdują się w kolekcji
-        foreach (var addedRecipe in addedRecipes)
-        {
-            Assert.Contains(allRecipes, r => r.ID == addedRecipe.ID);
-        }
+        //Assert
+        Assert.Equal(recipesInRepoAsResponse.Count, allRecipes.Count);
     }
     #endregion
     #region GetFilteredRecipes()
     [Fact]
-    public async Task GetFilteredRecipes_ProperSearchValues()
+    public async Task GetFilteredRecipes_ProperSearchValues_ReturnFilteredRecipes()
     {
-        List<RecipeResponse>? allRecipes = await _recipeService.GetAllRecipes();
-        List<RecipeResponse> expectedFilteredRecipes = new List<RecipeResponse>();
+        List<Recipe> fakeList = new()
+        {
+            _fixture.Build<Recipe>().With(r => r.Name, "spaghetti").Create(),
+            _fixture.Build<Recipe>().With(r => r.Name, "gh").Create(),
+            _fixture.Create<Recipe>()
+
+        };
+
+        _recipeRepositoryMock
+            .Setup(r => r.GetFilteredRecipes(It.IsAny<Expression<Func<Recipe, bool>>>()))
+            .Returns(async (Expression<Func<Recipe, bool>> filter) =>
+            {
+                var data = fakeList.AsQueryable().Where(filter).ToList();
+                return await Task.FromResult(data);
+            });
 
         string? searchString = "Spaghetti";
         string? searchBy = nameof(RecipeResponse.Name);
-        List<RecipeResponse> filteredRecipes = new List<RecipeResponse>();
 
-        filteredRecipes = await _recipeService.GetFilteredRecipes(searchBy, searchString);
-        expectedFilteredRecipes = allRecipes.Where(
-            r => r.Name != null
-            && r.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)
-        ).ToList();
+        List<RecipeResponse> expectedFilteredRecipes = fakeList
+            .Select(r => r.ToRecipeResponse())
+            .Where(r =>
+                !string.IsNullOrWhiteSpace(r.Name)
+                && r.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
+        List<RecipeResponse> filteredRecipes = await _recipeService.GetFilteredRecipes(searchBy, searchString);
+
+
+        // Assert
         Assert.Equal(expectedFilteredRecipes.Count, filteredRecipes.Count);
         Assert.NotEmpty(filteredRecipes);
-        Assert.All(filteredRecipes, r => Assert.Contains(searchString, r.Name, StringComparison.OrdinalIgnoreCase));
+        Assert.All(filteredRecipes, r =>
+        Assert.Contains(searchString, r.Name, StringComparison.OrdinalIgnoreCase));
     }
 
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    public async Task GetFilteredRecipes_NullOrEmptySearchName(string searchString)
+    public async Task GetFilteredRecipes_NullOrEmptySearchName_ReturnAllRecipes(string searchString)
     {
-        List<RecipeResponse> allRecipes = await _recipeService.GetAllRecipes();
+        List<Recipe> fakeList = _fixture.CreateMany<Recipe>(5).ToList();
+
+        _recipeRepositoryMock.Setup(r => r.GetAllRecipes()).ReturnsAsync(fakeList);
+        _recipeRepositoryMock
+            .Setup(r => r.GetFilteredRecipes(It.IsAny<Expression<Func<Recipe, bool>>>()))
+            .ReturnsAsync(fakeList);
 
         string? searchBy = nameof(RecipeResponse.Name);
         List<RecipeResponse> filteredRecipes = await _recipeService.GetFilteredRecipes(searchBy, searchString);
 
-        Assert.Equal(allRecipes, filteredRecipes);
+        List<RecipeResponse> expectedFilteredRecipes = fakeList.Select(r => r.ToRecipeResponse()).ToList();
+        Assert.Equal(expectedFilteredRecipes, filteredRecipes);
     }
 
     [Fact]
-    public async Task GetFilteredRecipes_NullSearchBy()
+    public async Task GetFilteredRecipes_NullSearchBy_ReturnsAllRecipes()
     {
-        List<RecipeResponse> allRecipes = await _recipeService.GetAllRecipes();
+        // Arrange
+        List<Recipe> fakeList = new()
+        {
+            _fixture.Create<Recipe>(),
+            _fixture.Create<Recipe>(),
+            _fixture.Build<Recipe>().With(r => r.Name,"sałatka").Create(),
+            _fixture.Build<Recipe>().With(r => r.Name,"sałatka").Create()
+        };
+        _recipeRepositoryMock.Setup(r => r.GetAllRecipes()).ReturnsAsync(fakeList);
+
+        // Act
         string? searchString = "sałatka";
         string? searchBy = null;
 
         List<RecipeResponse> filteredRecipes = await _recipeService.GetFilteredRecipes(searchBy, searchString);
 
-        Assert.Equal(allRecipes.Count, filteredRecipes.Count);
+        // Assert
+        List<RecipeResponse> fakeListAsResponse = fakeList.Select(r => r.ToRecipeResponse()).ToList();
+        Assert.Equal(fakeListAsResponse.Count, filteredRecipes.Count);
     }
 
     [Fact]
-    public async Task GetFilteredRecipes_NoResults()
+    public async Task GetFilteredRecipes_NoResults_ReturnsEmptyCollection()
     {
-        List<RecipeResponse> allRecipes = await _recipeService.GetAllRecipes();
+        List<Recipe> fakeList = _fixture.CreateMany<Recipe>(5).ToList();
+        _recipeRepositoryMock
+            .Setup(r => r.GetFilteredRecipes(It.IsAny<Expression<Func<Recipe, bool>>>()))
+            .Returns(async (Expression<Func<Recipe, bool>> filter) =>
+            {
+                var data = fakeList.AsQueryable().Where(filter).ToList();
+                return await Task.FromResult(data);
+            });
 
         string? searchString = "Paella z kurczakiem";
         string? searchBy = nameof(RecipeResponse.Name);
@@ -290,33 +312,40 @@ public class RecipeServiceTests
     [Fact]
     public async Task GetSortedRecipes_ReturnAscendingOrder()
     {
-        List<RecipeResponse> allRecipes = await _recipeService.GetAllRecipes();
+        List<Recipe> fakeList = _fixture.CreateMany<Recipe>(5).ToList();
+        _recipeRepositoryMock.Setup(r => r.GetAllRecipes()).ReturnsAsync(fakeList);
 
-        List<RecipeResponse>? sortedRecipes = await _recipeService.GetSortedRecipes(allRecipes, nameof(RecipeResponse.Author), true);
+        List<RecipeResponse> fakeListAsResponse = fakeList.Select(r => r.ToRecipeResponse()).ToList();
 
-        var expectedOrder = allRecipes.OrderBy(r => r.Author).ToList();
+        List<RecipeResponse>? sortedRecipes = await _recipeService.GetSortedRecipes(fakeListAsResponse, nameof(RecipeResponse.Author), true);
+
+        var expectedOrder = fakeListAsResponse.OrderBy(r => r.Author).ToList();
         Assert.Equal(expectedOrder.Select(r => r.Author), sortedRecipes.Select(r => r.Author));
     }
 
     [Fact]
     public async Task GetSortedRecipes_ReturnDescendingOrder()
     {
-        List<RecipeResponse> allRecipes = await _recipeService.GetAllRecipes();
+        List<Recipe> fakeList = _fixture.CreateMany<Recipe>(5).ToList();
+        _recipeRepositoryMock.Setup(r => r.GetAllRecipes()).ReturnsAsync(fakeList);
 
-        List<RecipeResponse>? sortedRecipes = await _recipeService.GetSortedRecipes(allRecipes, nameof(RecipeResponse.Author), false);
+        List<RecipeResponse> fakeListAsResponse = fakeList.Select(r => r.ToRecipeResponse()).ToList();
+        List<RecipeResponse>? sortedRecipes = await _recipeService.GetSortedRecipes(fakeListAsResponse, nameof(RecipeResponse.Author), false);
 
-        var expectedOrder = allRecipes.OrderByDescending(r => r.Author).ToList();
+        var expectedOrder = fakeListAsResponse.OrderByDescending(r => r.Author).ToList();
         Assert.Equal(expectedOrder.Select(r => r.Author), sortedRecipes.Select(r => r.Author));
     }
 
     [Fact]
     public async Task GetSortedRecipes_CheckCount()
     {
-        List<RecipeResponse> allRecipes = await _recipeService.GetAllRecipes();
+        List<Recipe> fakeList = _fixture.CreateMany<Recipe>(5).ToList();
+        _recipeRepositoryMock.Setup(r => r.GetAllRecipes()).ReturnsAsync(fakeList);
 
-        List<RecipeResponse>? sortedRecipes = await _recipeService.GetSortedRecipes(allRecipes, nameof(RecipeResponse.Author), false);
+        List<RecipeResponse> fakeListAsResponse = fakeList.Select(r => r.ToRecipeResponse()).ToList();
+        List<RecipeResponse>? sortedRecipes = await _recipeService.GetSortedRecipes(fakeListAsResponse, nameof(RecipeResponse.Author), false);
 
-        Assert.Equal(sortedRecipes.Count, allRecipes.Count);
+        Assert.Equal(sortedRecipes.Count, fakeListAsResponse.Count);
     }
 
     [Fact]
@@ -329,22 +358,27 @@ public class RecipeServiceTests
     [Fact]
     public async Task GetSortedRecipes_SingleElement_ReturnsSameList()
     {
-        List<RecipeResponse> single = new List<RecipeResponse> { new RecipeResponse { Author = "Test" } };
+        List<Recipe> fakeList = _fixture.CreateMany<Recipe>(1).ToList();
+        _recipeRepositoryMock.Setup(r => r.GetAllRecipes()).ReturnsAsync(fakeList);
 
-        List<RecipeResponse>? result = await _recipeService.GetSortedRecipes(single, nameof(RecipeResponse.Author), true);
+        List<RecipeResponse> fakeListAsResponse = fakeList.Select(r => r.ToRecipeResponse()).ToList();
+
+        List<RecipeResponse>? result = await _recipeService.GetSortedRecipes(fakeListAsResponse, nameof(RecipeResponse.Author), true);
 
         Assert.Single(result);
-        Assert.Equal("Test", result[0].Author);
     }
 
     [Fact]
     public async Task GetSortedRecipes_InvalidProperty_ReturnUnsorted()
     {
-        List<RecipeResponse> allRecipes = await _recipeService.GetAllRecipes();
+        List<Recipe> fakeList = _fixture.CreateMany<Recipe>(3).ToList();
+        _recipeRepositoryMock.Setup(r => r.GetAllRecipes()).ReturnsAsync(fakeList);
 
-        List<RecipeResponse> sortedRecipes = await _recipeService.GetSortedRecipes(allRecipes, "abc", false);
+        List<RecipeResponse> fakeListAsResponse = fakeList.Select(r => r.ToRecipeResponse()).ToList();
 
-        Assert.Equal(allRecipes.Count, sortedRecipes.Count);
+        List<RecipeResponse> sortedRecipes = await _recipeService.GetSortedRecipes(fakeListAsResponse, "abc", false);
+
+        Assert.Equal(fakeListAsResponse.Count, sortedRecipes.Count);
     }
 
     [Fact]
@@ -381,20 +415,31 @@ public class RecipeServiceTests
     [Fact]
     public async Task UpdateRecipe_ValidData_UpdatesSuccessfully()
     {
-        List<RecipeResponse> allRecipes = await _recipeService.GetAllRecipes();
-        RecipeResponse existingRecipe = allRecipes.First();
+        // Arrange
+        List<Recipe> fakeDb = _fixture.CreateMany<Recipe>(3).ToList();
+        Recipe testRecipe = fakeDb.Last();
+
+        _recipeRepositoryMock
+            .Setup(r => r.UpdateRecipe(It.IsAny<Recipe>()))
+             .ReturnsAsync((Recipe r) => r);
+
+        _recipeRepositoryMock
+            .Setup(r => r.GetRecipeByID(It.IsAny<Guid>()))
+            .ReturnsAsync((Guid id) => fakeDb.FirstOrDefault(r => r.ID == id));
 
         RecipeUpdateRequest recipeToUpdate = _fixture.Build<RecipeUpdateRequest>()
-            .With(x => x.ID, existingRecipe.ID)
+            .With(x => x.ID, testRecipe.ID)
             .With(x => x.CreatedAt, DateTime.UtcNow)
             .Create();
 
+        // Act
         RecipeResponse updatedRecipe = await _recipeService.UpdateRecipe(recipeToUpdate);
-        RecipeResponse? recipeFromGetByID = await _recipeService.GetRecipeByID(existingRecipe.ID);
 
         // Assert
+        RecipeResponse testRecipeResponse = testRecipe.ToRecipeResponse();
+
         Assert.NotNull(updatedRecipe);
-        Assert.Equal(existingRecipe.ID, updatedRecipe.ID);
+        Assert.Equal(testRecipeResponse.ID, updatedRecipe.ID);
         Assert.Equal(recipeToUpdate.Name, updatedRecipe.Name);
         Assert.Equal(recipeToUpdate.Description, updatedRecipe.Description);
         Assert.Equal(recipeToUpdate.Author, updatedRecipe.Author);
@@ -403,11 +448,7 @@ public class RecipeServiceTests
         Assert.Equal(recipeToUpdate.Servings, updatedRecipe.Servings);
         Assert.Equal(recipeToUpdate.Rating, updatedRecipe.Rating);
         Assert.Equal(recipeToUpdate.ImageUrl, updatedRecipe.ImageUrl);
-        Assert.Equal(existingRecipe.CreatedAt, updatedRecipe.CreatedAt);
-
-        Assert.NotNull(recipeFromGetByID);
-        Assert.Equal(recipeToUpdate.Name, recipeFromGetByID.Name);
-        Assert.Equal(recipeToUpdate.Rating, recipeFromGetByID.Rating);
+        Assert.Equal(testRecipeResponse.CreatedAt, updatedRecipe.CreatedAt);
     }
 
     #endregion

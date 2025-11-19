@@ -1,12 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using RecipeApp.Domain.Entities;
 using RecipeApp.Domain.Enums;
+using RecipeApp.Domain.Validation;
 
 namespace RecipeApp.Application.DTOs.RecipeDTO;
 
 public class RecipeUpdateRequest
 {
     [Required(ErrorMessage = "Recipe musi mieć ID")]
+    [NotEmptyGuid(ErrorMessage = "ID nie może być puste")]
     public Guid? ID { get; set; }
     [Required(ErrorMessage = "Nazwa przepisu jest wymagana")]
     [StringLength(50, MinimumLength = 3, ErrorMessage = "Nazwa musi mieć od 3 do 50 znaków")]

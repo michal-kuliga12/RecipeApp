@@ -1,4 +1,5 @@
-﻿using RecipeApp.Application.DTOs.RecipeDTO;
+﻿using System.Linq.Expressions;
+using RecipeApp.Application.DTOs.RecipeDTO;
 using RecipeApp.Application.Helpers;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Domain.Entities;
@@ -15,15 +16,15 @@ public class RecipeService : IRecipeService
         _recipeRepository = recipeRepository;
     }
 
-    public async Task<RecipeResponse?> AddRecipe(RecipeAddRequest? recipeAddRequest)
+    public async Task<Result<RecipeResponse>> AddRecipe(RecipeAddRequest? recipeAddRequest)
     {
         if (recipeAddRequest is null)
-            throw new ArgumentNullException("RecipeAddRequest nie może być null");
+            throw new ArgumentNullException("Recipe Add Request nie może być null");
 
         bool isModelValid = ValidationHelper.ValidateModel(recipeAddRequest);
 
         if (!isModelValid)
-            throw new ArgumentNullException("Model jest niepoprawny");
+            return Result<RecipeResponse>.Failure("Wprowadzono niepoprawne dane");
 
         Recipe recipe = recipeAddRequest.ToRecipe();
         recipe.ID = Guid.NewGuid();
@@ -32,124 +33,81 @@ public class RecipeService : IRecipeService
 
         RecipeResponse recipeResponse = recipe.ToRecipeResponse();
 
-        return recipeResponse;
+        return Result<RecipeResponse>.Success(recipeResponse);
 
     }
-    public async Task<RecipeResponse?> GetRecipeByID(Guid? recipeID)
+
+    public async Task<Result<RecipeResponse>> GetRecipeByID(Guid? inID)
     {
-        if (recipeID == null)
-            return null;
+        if (inID is null)
+            return Result<RecipeResponse>.Failure("Nie podano ID");
 
-        Recipe? recipeFound = await _recipeRepository.GetRecipeByID(recipeID.Value);
+        Recipe? recipeFound = await _recipeRepository.GetRecipeByID(inID.Value);
 
-        if (recipeFound == null)
-            return null;
+        if (recipeFound is null)
+            return Result<RecipeResponse>.Failure("Nie znaleziono szukanego przepisu.");
 
-        return recipeFound.ToRecipeResponse();
+        return Result<RecipeResponse>.Success(recipeFound.ToRecipeResponse());
     }
-    public async Task<List<RecipeResponse>?> GetAllRecipes()
+
+    public async Task<Result<List<RecipeResponse>>> GetAllRecipes()
     {
         var recipes = await _recipeRepository.GetAllRecipes();
-        return recipes.Select(temp => temp.ToRecipeResponse()).ToList();
+        List<RecipeResponse> recipesAsResponse = recipes.Select(temp => temp.ToRecipeResponse()).ToList();
+        return Result<List<RecipeResponse>>.Success(recipesAsResponse);
     }
-    public async Task<List<RecipeResponse>?> GetFilteredRecipes(string searchBy, string? searchString)
+
+    public async Task<Result<List<RecipeResponse>>> GetFilteredRecipes(string searchBy, string? searchString)
     {
         List<Recipe> recipes = new List<Recipe>();
 
-        if (string.IsNullOrEmpty(searchBy) || string.IsNullOrEmpty(searchString))
-            return (await _recipeRepository.GetAllRecipes()).Select(temp => temp.ToRecipeResponse()).ToList();
-
-        recipes = searchBy switch
+        if (string.IsNullOrWhiteSpace(searchBy) || string.IsNullOrWhiteSpace(searchString))
         {
-            nameof(RecipeResponse.Name) =>
-                await _recipeRepository.GetFilteredRecipes(temp =>
-                    !string.IsNullOrEmpty(temp.Name)
-                    && temp.Name.Contains(searchString, StringComparison.CurrentCultureIgnoreCase))
-                ?? new List<Recipe>(),
+            var all = await _recipeRepository.GetAllRecipes();
+            return Result<List<RecipeResponse>>.Success(all.Select(r => r.ToRecipeResponse()).ToList());
+        }
 
-            nameof(RecipeResponse.Description) =>
-                await _recipeRepository.GetFilteredRecipes(temp =>
-                    !string.IsNullOrEmpty(temp.Description)
-                    && temp.Description.Contains(searchString, StringComparison.CurrentCultureIgnoreCase))
-                ?? new List<Recipe>(),
+        Expression<Func<Recipe, bool>> filter = ApplyFilter(searchBy, searchString);
 
-            nameof(RecipeResponse.Author) =>
-                await _recipeRepository.GetFilteredRecipes(temp =>
-                    !string.IsNullOrEmpty(temp.Author)
-                    && temp.Author.Contains(searchString, StringComparison.CurrentCultureIgnoreCase))
-                ?? new List<Recipe>(),
+        var filtered = await _recipeRepository.GetFilteredRecipes(filter)
+            ?? new List<Recipe>();
 
-            nameof(RecipeResponse.Category) =>
-                await _recipeRepository.GetFilteredRecipes(temp =>
-                    temp.Category != null
-                    && EnumDisplayHelper.GetDisplayName(temp.Category)
-                        .Contains(searchString, StringComparison.CurrentCultureIgnoreCase))
-                ?? new List<Recipe>(),
-
-            nameof(RecipeResponse.PreparationTime) =>
-                await _recipeRepository.GetFilteredRecipes(temp =>
-                    temp.PreparationTime != null
-                    && temp.PreparationTime >= 1
-                    && temp.PreparationTime.ToString() == searchString)
-                ?? new List<Recipe>(),
-
-            nameof(RecipeResponse.RecipeIngredients) =>
-                await _recipeRepository.GetFilteredRecipes(temp =>
-                    temp.RecipeIngredients != null
-                    && temp.RecipeIngredients.Any(ing =>
-                        ing.Ingredient.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)))
-                ?? new List<Recipe>(),
-
-            nameof(RecipeResponse.Servings) =>
-                await _recipeRepository.GetFilteredRecipes(temp =>
-                    temp.Servings != null
-                    && temp.Servings >= 1
-                    && temp.Servings.ToString() == searchString)
-                ?? new List<Recipe>(),
-
-            nameof(RecipeResponse.Rating) =>
-                await _recipeRepository.GetFilteredRecipes(temp =>
-                    temp.Rating != null
-                    && temp.Rating.ToString() == searchString)
-                ?? new List<Recipe>(),
-
-            _ => (await _recipeRepository.GetAllRecipes()) ?? new List<Recipe>()
-        };
-
-        return recipes.Select(temp => temp.ToRecipeResponse()).ToList();
+        return Result<List<RecipeResponse>>.Success(filtered.Select(r => r.ToRecipeResponse()).ToList());
     }
-    public async Task<List<RecipeResponse>?> GetSortedRecipes(List<RecipeResponse> recipeList, string sortBy, bool ascending = true)
+
+    public async Task<Result<List<RecipeResponse>>> GetSortedRecipes(List<RecipeResponse> inRecipes, string sortBy, bool ascending = true)
     {
-        if (recipeList == null)
-            throw new ArgumentNullException("Lista przepisów do sortowania nie może być null");
+        if (inRecipes is null)
+            return Result<List<RecipeResponse>>.Failure("Lista przepisów do sortowania nie może być null");
 
         if (String.IsNullOrEmpty(sortBy))
-            return recipeList;
+            return Result<List<RecipeResponse>>.Success(inRecipes);
 
-        List<RecipeResponse> sortedRecipes = (sortBy, ascending) switch
+        List<RecipeResponse> sorted = (sortBy, ascending) switch
         {
-            (nameof(RecipeResponse.Name), ascending: true) => recipeList.OrderBy(temp => temp.Name, StringComparer.OrdinalIgnoreCase).ToList(),
-            (nameof(RecipeResponse.Name), ascending: false) => recipeList.OrderByDescending(temp => temp.Name, StringComparer.OrdinalIgnoreCase).ToList(),
-            (nameof(RecipeResponse.Description), ascending: true) => recipeList.OrderBy(temp => temp.Description, StringComparer.OrdinalIgnoreCase).ToList(),
-            (nameof(RecipeResponse.Description), ascending: false) => recipeList.OrderByDescending(temp => temp.Description, StringComparer.OrdinalIgnoreCase).ToList(),
-            (nameof(RecipeResponse.Author), ascending: true) => recipeList.OrderBy(temp => temp.Author, StringComparer.OrdinalIgnoreCase).ToList(),
-            (nameof(RecipeResponse.Author), ascending: false) => recipeList.OrderByDescending(temp => temp.Author, StringComparer.OrdinalIgnoreCase).ToList(),
-            (nameof(RecipeResponse.Category), ascending: true) => recipeList.OrderBy(temp => temp.Category).ToList(),
-            (nameof(RecipeResponse.Category), ascending: false) => recipeList.OrderByDescending(temp => temp.Category).ToList(),
-            (nameof(RecipeResponse.PreparationTime), ascending: true) => recipeList.OrderBy(temp => temp.PreparationTime).ToList(),
-            (nameof(RecipeResponse.PreparationTime), ascending: false) => recipeList.OrderByDescending(temp => temp.PreparationTime).ToList(),
-            (nameof(RecipeResponse.Servings), ascending: true) => recipeList.OrderBy(temp => temp.Servings).ToList(),
-            (nameof(RecipeResponse.Servings), ascending: false) => recipeList.OrderByDescending(temp => temp.Servings).ToList(),
-            (nameof(RecipeResponse.Rating), ascending: true) => recipeList.OrderBy(temp => temp.Rating).ToList(),
-            (nameof(RecipeResponse.Rating), ascending: false) => recipeList.OrderByDescending(temp => temp.Rating).ToList(),
-            (nameof(RecipeResponse.CreatedAt), ascending: true) => recipeList.OrderBy(temp => temp.CreatedAt).ToList(),
-            (nameof(RecipeResponse.CreatedAt), ascending: false) => recipeList.OrderByDescending(temp => temp.CreatedAt).ToList(),
-            _ => recipeList
+            (nameof(RecipeResponse.Name), ascending: true) => inRecipes.OrderBy(temp => temp.Name, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Name), ascending: false) => inRecipes.OrderByDescending(temp => temp.Name, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Description), ascending: true) => inRecipes.OrderBy(temp => temp.Description, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Description), ascending: false) => inRecipes.OrderByDescending(temp => temp.Description, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Author), ascending: true) => inRecipes.OrderBy(temp => temp.Author, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Author), ascending: false) => inRecipes.OrderByDescending(temp => temp.Author, StringComparer.OrdinalIgnoreCase).ToList(),
+            (nameof(RecipeResponse.Category), ascending: true) => inRecipes.OrderBy(temp => temp.Category).ToList(),
+            (nameof(RecipeResponse.Category), ascending: false) => inRecipes.OrderByDescending(temp => temp.Category).ToList(),
+            (nameof(RecipeResponse.PreparationTime), ascending: true) => inRecipes.OrderBy(temp => temp.PreparationTime).ToList(),
+            (nameof(RecipeResponse.PreparationTime), ascending: false) => inRecipes.OrderByDescending(temp => temp.PreparationTime).ToList(),
+            (nameof(RecipeResponse.Servings), ascending: true) => inRecipes.OrderBy(temp => temp.Servings).ToList(),
+            (nameof(RecipeResponse.Servings), ascending: false) => inRecipes.OrderByDescending(temp => temp.Servings).ToList(),
+            (nameof(RecipeResponse.Rating), ascending: true) => inRecipes.OrderBy(temp => temp.Rating).ToList(),
+            (nameof(RecipeResponse.Rating), ascending: false) => inRecipes.OrderByDescending(temp => temp.Rating).ToList(),
+            (nameof(RecipeResponse.CreatedAt), ascending: true) => inRecipes.OrderBy(temp => temp.CreatedAt).ToList(),
+            (nameof(RecipeResponse.CreatedAt), ascending: false) => inRecipes.OrderByDescending(temp => temp.CreatedAt).ToList(),
+            _ => inRecipes
         };
 
-        return sortedRecipes;
+        return Result<List<RecipeResponse>>.Success(sorted);
     }
-    public async Task<RecipeResponse?> UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest)
+
+    public async Task<Result<RecipeResponse>> UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest)
     {
         if (recipeUpdateRequest is null)
             throw new ArgumentNullException("RecipeUpdateRequest nie może być null");
@@ -157,51 +115,98 @@ public class RecipeService : IRecipeService
         bool isModelValid = ValidationHelper.ValidateModel(recipeUpdateRequest);
 
         if (!isModelValid)
-            throw new ArgumentNullException("Model jest niepoprawny");
+            return Result<RecipeResponse>.Failure("Wprowadzono niepoprawne dane");
 
+        Recipe? dbRecipe = await _recipeRepository.GetRecipeByID(recipeUpdateRequest.ID.Value);
 
-        Recipe? recipeFound = await _recipeRepository.GetRecipeByID(recipeUpdateRequest.ID.Value);
+        if (dbRecipe is null)
+            return Result<RecipeResponse>.Failure("Nie znaleziono przepisu w bazie danych");
 
-        if (recipeFound is null)
-            return null;
+        dbRecipe.Name = recipeUpdateRequest.Name;
+        dbRecipe.Description = recipeUpdateRequest.Description;
+        dbRecipe.Author = recipeUpdateRequest.Author;
+        dbRecipe.Category = recipeUpdateRequest.Category;
+        dbRecipe.PreparationTime = recipeUpdateRequest.PreparationTime;
+        dbRecipe.RecipeIngredients = recipeUpdateRequest.RecipeIngredients;
+        dbRecipe.Servings = recipeUpdateRequest.Servings;
+        dbRecipe.Rating = recipeUpdateRequest.Rating;
+        dbRecipe.ImageUrl = recipeUpdateRequest.ImageUrl;
 
-        recipeFound.Name = recipeUpdateRequest.Name;
-        recipeFound.Description = recipeUpdateRequest.Description;
-        recipeFound.Author = recipeUpdateRequest.Author;
-        recipeFound.Category = recipeUpdateRequest.Category;
-        recipeFound.PreparationTime = recipeUpdateRequest.PreparationTime;
-        recipeFound.RecipeIngredients = recipeUpdateRequest.RecipeIngredients;
-        recipeFound.Servings = recipeUpdateRequest.Servings;
-        recipeFound.Rating = recipeUpdateRequest.Rating;
-        recipeFound.ImageUrl = recipeUpdateRequest.ImageUrl;
+        await _recipeRepository.UpdateRecipe(dbRecipe);
 
-        await _recipeRepository.UpdateRecipe(recipeFound);
-
-        return recipeFound.ToRecipeResponse();
+        return Result<RecipeResponse>.Success(dbRecipe.ToRecipeResponse());
     }
-    public async Task<bool> DeleteRecipe(Guid? recipeID)
+    public async Task<Result> DeleteRecipe(Guid? inID)
     {
-        if (recipeID is null)
+        if (inID is null)
             throw new ArgumentNullException("RecipeID nie może być null");
 
-        Recipe? recipeToDelete = await _recipeRepository.GetRecipeByID(recipeID.Value);
+        Recipe? recipeToDelete = await _recipeRepository.GetRecipeByID(inID.Value);
 
-        if (recipeToDelete == null)
-            return false;
+        if (recipeToDelete is null)
+            return Result.Failure("Nie znaleziono przepisu w bazie danych");
 
-        await _recipeRepository.DeleteRecipe(recipeID.Value);
+        await _recipeRepository.DeleteRecipe(inID.Value);
 
-        return true;
+        return Result.Success();
     }
-    public async Task<Recipe?> GetRecipeEntityByID(Guid? recipeID)
+
+    public async Task<Result<Recipe>> GetRecipeEntityByID(Guid? inID)
     {
-        if (recipeID == null)
-            return null;
-        Recipe? recipeFound = await _recipeRepository.GetRecipeByID(recipeID.Value);
+        if (inID is null)
+            throw new ArgumentNullException("RecipeID nie może być null");
+        Recipe? dbRecipe = await _recipeRepository.GetRecipeByID(inID.Value);
 
-        if (recipeFound is null)
-            return null;
+        if (dbRecipe is null)
+            return Result<Recipe>.Failure("Nie znaleziono przepisu w bazie danych");
 
-        return recipeFound;
+        return Result<Recipe>.Success(dbRecipe);
     }
+
+
+    #region Helper methods
+    private Expression<Func<Recipe, bool>> ApplyFilter(string searchBy, string? searchString)
+    {
+        return searchBy switch
+        {
+            nameof(RecipeResponse.Name) =>
+                temp => !string.IsNullOrEmpty(temp.Name)
+                        && temp.Name.Contains(searchString, StringComparison.CurrentCultureIgnoreCase),
+
+            nameof(RecipeResponse.Description) =>
+                temp => !string.IsNullOrEmpty(temp.Description)
+                        && temp.Description.Contains(searchString, StringComparison.CurrentCultureIgnoreCase),
+
+            nameof(RecipeResponse.Author) =>
+                temp => !string.IsNullOrEmpty(temp.Author)
+                        && temp.Author.Contains(searchString, StringComparison.CurrentCultureIgnoreCase),
+
+            nameof(RecipeResponse.Category) =>
+                temp => temp.Category != null
+                        && EnumDisplayHelper.GetDisplayName(temp.Category).Contains(searchString, StringComparison.CurrentCultureIgnoreCase),
+
+            nameof(RecipeResponse.PreparationTime) =>
+                temp => temp.PreparationTime != null
+                        && temp.PreparationTime >= 1
+                        && temp.PreparationTime.ToString() == searchString,
+
+            nameof(RecipeResponse.RecipeIngredients) =>
+                temp => temp.RecipeIngredients != null
+                        && temp.RecipeIngredients.Any
+                            (
+                                ing => ing.Ingredient.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+                            ),
+            nameof(RecipeResponse.Servings) =>
+                temp => temp.Servings != null
+                        && temp.Servings >= 1
+                        && temp.Servings.ToString() == searchString,
+
+            nameof(RecipeResponse.Rating) =>
+                temp => temp.Rating != null
+                        && temp.Rating.ToString() == searchString,
+
+            _ => temp => true
+        };
+    }
+    #endregion
 }

@@ -1,13 +1,14 @@
 ﻿using RecipeApp.Application.DTOs.IngredientDTO;
+using RecipeApp.Application.Helpers;
 
 namespace RecipeApp.Application.Interfaces;
 
 public interface IIngredientService
 {
-    Task<IngredientResponse?> AddIngredient(IngredientAddRequest ingredientAddRequest);
-    Task<IngredientResponse?> GetIngredientByID(Guid? ingredientID);
-    Task<List<IngredientResponse?>> GetAllIngredients();
-    Task<List<IngredientResponse?>> GetFilteredIngredients(string? searchString);
-    Task<IngredientResponse?> UpdateIngredient(IngredientUpdateRequest ingredientUpdateRequest);
-    Task<bool> DeleteIngredient(Guid? ingredientID);
+    Task<Result<IngredientResponse>> AddIngredient(IngredientAddRequest ingredientAddRequest);
+    Task<Result<IngredientResponse>> GetIngredientByID(Guid? ingredientID);
+    Task<Result<List<IngredientResponse>>> GetAllIngredients();
+    Task<Result<List<IngredientResponse>>> GetFilteredIngredients(string? searchString);
+    Task<Result<IngredientResponse>> UpdateIngredient(IngredientUpdateRequest ingredientUpdateRequest);
+    Task<Result> DeleteIngredient(Guid? ingredientID);
 }

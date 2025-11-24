@@ -1,11 +1,12 @@
-﻿using AutoFixture;
-using EntityFrameworkCoreMock;
-using Microsoft.EntityFrameworkCore;
+﻿using System.Linq.Expressions;
+using AutoFixture;
+using Moq;
 using RecipeApp.Application.DTOs.IngredientDTO;
+using RecipeApp.Application.Helpers;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Application.Services;
 using RecipeApp.Domain.Entities;
-using RecipeApp.Infrastructure;
+using RecipeApp.Infrastructure.Repositories;
 
 namespace RecipeApp.Tests;
 
@@ -13,34 +14,64 @@ public class IngredientServiceTests
 {
     private readonly IIngredientService _ingredientService;
     private readonly IFixture _fixture;
-    private readonly ApplicationDbContext _dbContext;
+    private readonly Mock<IIngredientRepository> _ingredientRepositoryMock;
+    private readonly IIngredientRepository _ingredientRepository;
+
 
     public IngredientServiceTests()
     {
-        List<Ingredient>? ingredientsInitialData = new List<Ingredient>() { };
+        _ingredientRepositoryMock = new Mock<IIngredientRepository>();
+        _ingredientRepository = _ingredientRepositoryMock.Object;
+
         _fixture = new Fixture();
+        _fixture.Behaviors
+            .OfType<ThrowingRecursionBehavior>()
+            .ToList()
+            .ForEach(b => _fixture.Behaviors.Remove(b));
 
-        DbContextMock<ApplicationDbContext> dbContextMock = new DbContextMock<ApplicationDbContext>(
-                new DbContextOptionsBuilder<ApplicationDbContext>().Options
-            );
+        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
-        _dbContext = dbContextMock.Object;
-        dbContextMock.CreateDbSetMock(temp => temp.Ingredients, ingredientsInitialData);
-
-        _ingredientService = new IngredientService(_dbContext);
+        _ingredientService = new IngredientService(_ingredientRepository);
     }
+
+    #region Helper methods
+    private void AssertSuccessHelper<T>(Result<T> result)
+    {
+        Assert.IsType<Result<T>>(result);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+    }
+    private void AssertSuccessHelper(Result result)
+    {
+        Assert.IsType<Result>(result);
+        Assert.True(result.IsSuccess);
+    }
+
+    private void AssertFailureHelper<T>(Result<T> result)
+    {
+        Assert.IsType<Result<T>>(result);
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+    }
+    private void AssertFailureHelper(Result result)
+    {
+        Assert.IsType<Result>(result);
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+    }
+    #endregion
 
     #region AddIngredient()
     [Fact]
     public async Task AddIngredient_ValidIngredient_ShouldReturnIngredientResponse()
     {
-        IngredientAddRequest ingredientToAdd = _fixture.Create<IngredientAddRequest>();
+        IngredientAddRequest request = _fixture.Create<IngredientAddRequest>();
 
-        IngredientResponse? ingredientResponseFromAdd = await _ingredientService.AddIngredient(ingredientToAdd);
+        var result = await _ingredientService.AddIngredient(request);
 
-        Assert.NotNull(ingredientResponseFromAdd);
-        Assert.Equal(ingredientToAdd.Name, ingredientResponseFromAdd.Name);
-        Assert.NotEqual(ingredientResponseFromAdd.ID, Guid.Empty);
+        AssertSuccessHelper(result);
+        Assert.NotEqual(Guid.Empty, result.Value.ID);
+        Assert.Equal(request.Name, result.Value.Name);
     }
 
     [Theory]
@@ -54,10 +85,9 @@ public class IngredientServiceTests
             .With(x => x.Name, invalidName)
             .Create();
 
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
-        {
-            await _ingredientService.AddIngredient(ingredientToAdd);
-        });
+        var result = await _ingredientService.AddIngredient(ingredientToAdd);
+
+        AssertFailureHelper(result);
     }
 
     [Fact]
@@ -75,61 +105,67 @@ public class IngredientServiceTests
     #region GetIngredientByID()
     public async Task GetRecipeByID_NullID()
     {
-        Guid? ingredientID = null;
-        IngredientResponse? ingredientFromGetByID = await _ingredientService.GetIngredientByID(ingredientID);
+        Guid? nullID = null;
+        var result = await _ingredientService.GetIngredientByID(nullID);
 
-        Assert.Null(ingredientFromGetByID);
+        AssertFailureHelper(result);
     }
 
     [Fact]
     public async Task GetIngredientByID_ValidID_IngredientNotFound()
     {
-        Guid? ingredientID = Guid.NewGuid();
-        IngredientResponse? ingredientFromGetByID = await _ingredientService.GetIngredientByID(ingredientID);
+        Guid? invalidID = Guid.NewGuid();
+        var result = await _ingredientService.GetIngredientByID(invalidID);
 
-        Assert.Null(ingredientFromGetByID);
+        AssertFailureHelper(result);
     }
 
     [Fact]
     public async Task GetIngredientByID_ValidID_IngredientFound()
     {
-        Ingredient ingredient = _fixture.Create<Ingredient>();
-        _dbContext.Ingredients.Add(ingredient);
-        await _dbContext.SaveChangesAsync();
+        Ingredient expectedIngredient = _fixture.Build<Ingredient>()
+            .With(i => i.ID, Guid.NewGuid())
+            .Create();
 
-        IngredientResponse? ingredientFromGetByID = await _ingredientService.GetIngredientByID(ingredient.ID);
+        _ingredientRepositoryMock.Setup(r => r.GetIngredientByID(It.IsAny<Guid>()))
+            .ReturnsAsync(expectedIngredient);
 
-        Assert.NotNull(ingredientFromGetByID);
-        Assert.Equal(ingredient.ID, ingredientFromGetByID.ID);
+
+        var result = await _ingredientService.GetIngredientByID(expectedIngredient.ID);
+
+        AssertSuccessHelper(result);
+        Assert.Equal(expectedIngredient.ID, result.Value.ID);
     }
-
 
     #endregion
     #region GetAllIngredients()
     [Fact]
     public async Task GetAllIngredients_EmptyList()
     {
-        List<IngredientResponse>? ingredientsFromGetAll = await _ingredientService.GetAllIngredients();
+        _ingredientRepositoryMock.Setup(r => r.GetAllIngredients())
+            .ReturnsAsync(new List<Ingredient>());
 
-        Assert.Empty(ingredientsFromGetAll);
-        Assert.NotNull(ingredientsFromGetAll);
+        var result = await _ingredientService.GetAllIngredients();
+
+        AssertSuccessHelper(result);
+        Assert.Empty(result.Value);
+        _ingredientRepositoryMock.Verify(r => r.GetAllIngredients(), Times.Once());
     }
 
     [Fact]
     public async Task GetAllIngredients_AddMultipleIngredients_ShouldContainThemAll()
     {
-        List<Ingredient>? ingredients = _fixture.CreateMany<Ingredient>(3).ToList();
-        ingredients.Select(i => _dbContext.Ingredients.Add(i));
-        await _dbContext.SaveChangesAsync();
+        List<Ingredient>? repoIngredients = _fixture.CreateMany<Ingredient>(3).ToList();
+        _ingredientRepositoryMock.Setup(r => r.GetAllIngredients())
+            .ReturnsAsync(repoIngredients);
 
         // Pobranie wszystkich przepisów
-        List<IngredientResponse>? allIngredients = await _ingredientService.GetAllIngredients();
+        var result = await _ingredientService.GetAllIngredients();
 
+        List<IngredientResponse> expected = repoIngredients.Select(r => r.ToIngredientResponse()).ToList();
         // Sprawdzenie, czy wszystkie dodane przepisy znajdują się w kolekcji
-        foreach (Ingredient ingredient in ingredients)
-        {
-            Assert.Contains(allIngredients, r => r.ID == ingredient.ID);
-        }
+        AssertSuccessHelper(result);
+        Assert.Equal(expected, result.Value);
     }
 
     #endregion
@@ -139,42 +175,41 @@ public class IngredientServiceTests
     [InlineData(null)]
     public async Task GetFilteredIngredients_InvalidSearchString(string? searchString)
     {
-        List<Ingredient>? ingredients = _fixture.CreateMany<Ingredient>(3).ToList();
-        ingredients.Select(i => _dbContext.Ingredients.Add(i));
-        await _dbContext.SaveChangesAsync();
+        List<Ingredient> repoIngredients = _fixture.CreateMany<Ingredient>(3).ToList();
+        _ingredientRepositoryMock.Setup(i => i.GetAllIngredients()).ReturnsAsync(repoIngredients);
 
-        List<IngredientResponse>? filteredIngredientsList = await _ingredientService.GetFilteredIngredients(searchString);
+        var result = await _ingredientService.GetFilteredIngredients(searchString);
 
-        Assert.Equal(ingredients!.Count, filteredIngredientsList!.Count);
+        List<IngredientResponse> expected = repoIngredients.Select(i => i.ToIngredientResponse()).ToList();
+        AssertSuccessHelper(result);
+        Assert.Equal(expected, result.Value);
     }
 
     [Fact]
     public async Task GetFilteredIngredients_ValidSearchString_ReturnFilteredIngredients()
     {
         // Arrange
-        string? searchString = "Po";
-
-        var names = new[] { "Rzodkiewka", "Ogórek", "Pomidor" };
-
-        var ingredientList = names
+        var names = new[] { "Rzodkiewka", "Ogórek", "Pomidor", };
+        List<Ingredient> dbIngredients = names
             .Select(name => _fixture.Build<Ingredient>()
                 .With(i => i.Name, name)
                 .Create())
             .ToList();
+        string? searchString = "rzodkiewka";
 
-        ingredientList.ForEach(i => _dbContext.Ingredients.Add(i));
-        List<IngredientResponse> ingredientResponseList = ingredientList.Select(i => i.ToIngredientResponse()).ToList();
-        await _dbContext.SaveChangesAsync();
+        _ingredientRepositoryMock.Setup(r => r.GetAllIngredients()).ReturnsAsync(dbIngredients);
+        _ingredientRepositoryMock.Setup(r => r.GetFilteredIngredients(It.IsAny<Expression<Func<Ingredient, bool>>>()))
+            .ReturnsAsync(dbIngredients.Where(i => i.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)).ToList());
 
         // Act
-        List<IngredientResponse>? filteredIngredientsList = await _ingredientService.GetFilteredIngredients(searchString);
-        List<IngredientResponse>? expectedIngredientsList = ingredientResponseList
+        var result = await _ingredientService.GetFilteredIngredients(searchString);
+        var expected = dbIngredients.Select(i => i.ToIngredientResponse())
             .Where(temp => temp.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         // Assert
-        Assert.Equal(expectedIngredientsList, ingredientResponseList);
-        Assert.Equal(expectedIngredientsList!.Count, filteredIngredientsList!.Count);
+        AssertSuccessHelper(result);
+        Assert.Equal(expected, result.Value);
     }
     #endregion
     #region UpdateIngredient()
@@ -192,35 +227,32 @@ public class IngredientServiceTests
     public async Task UpdateIngredient_NullID()
     {
         IngredientUpdateRequest ingredientUpdateRequest = _fixture.Build<IngredientUpdateRequest>()
-            .With(x => x.ID, (Guid?)null)
+            .With(x => x.ID, Guid.Empty)
             .Create();
 
-        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        {
-            await _ingredientService.UpdateIngredient(ingredientUpdateRequest);
-        });
+        var result = await _ingredientService.UpdateIngredient(ingredientUpdateRequest);
+
+        AssertFailureHelper(result);
     }
 
     [Fact]
     public async Task UpdateIngredient_ValidData_UpdatesSuccessfully()
     {
-        Ingredient ingredient = _fixture.Build<Ingredient>()
-            .With(x => x.Name, "Pomidor")
-            .Create();
-        _dbContext.Ingredients.Add(ingredient);
-        await _dbContext.SaveChangesAsync();
-
-        IngredientUpdateRequest ingredientToUpdate = _fixture.Build<IngredientUpdateRequest>()
-            .With(x => x.ID, ingredient.ID)
-            .With(x => x.Name, "test")
+        List<Ingredient> repoIngredients = _fixture.CreateMany<Ingredient>(3).ToList();
+        Ingredient testIngredient = repoIngredients.First();
+        IngredientUpdateRequest request = _fixture.Build<IngredientUpdateRequest>()
+            .With(i => i.ID, testIngredient.ID)
             .Create();
 
-        IngredientResponse? updatedIngredient = await _ingredientService.UpdateIngredient(ingredientToUpdate);
+        _ingredientRepositoryMock.Setup(r => r.GetIngredientByID(It.IsAny<Guid>()))
+            .ReturnsAsync((Guid id) => repoIngredients.FirstOrDefault(i => i.ID == id));
+
+        var result = await _ingredientService.UpdateIngredient(request);
 
         // Assert
-        Assert.NotNull(updatedIngredient);
-        Assert.Equal(ingredient.ID, updatedIngredient.ID);
-        Assert.Equal(ingredientToUpdate.Name, updatedIngredient.Name);
+        AssertSuccessHelper(result);
+        Assert.Equal(testIngredient.ID, result.Value.ID);
+        Assert.Equal(testIngredient.Name, result.Value.Name);
     }
     #endregion
     #region DeleteIngredient()
@@ -228,18 +260,20 @@ public class IngredientServiceTests
     public async Task DeleteIngredient_NullID()
     {
         Guid? invalidIngredientID = null;
-        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-        {
-            await _ingredientService.DeleteIngredient(invalidIngredientID);
-        });
+        var result = await _ingredientService.DeleteIngredient(invalidIngredientID);
+
+        AssertFailureHelper(result);
+
     }
 
     [Fact]
     public async Task DeleteIngredient_InvalidID_ReturnsFalse()
     {
         Guid? invalidIngredientID = Guid.NewGuid();
-        bool result = await _ingredientService.DeleteIngredient(invalidIngredientID);
-        Assert.False(result);
+        var result = await _ingredientService.DeleteIngredient(invalidIngredientID);
+
+        AssertFailureHelper(result);
+        Assert.False(result.IsSuccess);
     }
 
     public async Task DeleteIngredient_ValidID_DeletesSuccessfully()
@@ -247,17 +281,15 @@ public class IngredientServiceTests
         Ingredient addedIngredient = _fixture.Build<Ingredient>()
             .With(x => x.Name, "Pomidor")
             .Create();
-        _dbContext.Ingredients.Add(addedIngredient);
-        await _dbContext.SaveChangesAsync();
 
-        bool deleteResult = await _ingredientService.DeleteIngredient(addedIngredient.ID);
+        _ingredientRepositoryMock.Setup(r => r.DeleteIngredient(It.IsAny<Guid>()))
+            .ReturnsAsync(true);
 
-        Ingredient? ingredientFromDb = await _dbContext.Ingredients.SingleOrDefaultAsync(i => i.ID == addedIngredient.ID);
-        List<Ingredient>? allIngredients = await _dbContext.Ingredients.ToListAsync();
+        var result = await _ingredientService.DeleteIngredient(addedIngredient.ID);
 
-        Assert.True(deleteResult);
-        Assert.Null(ingredientFromDb);
-        Assert.DoesNotContain(addedIngredient, allIngredients);
+        AssertSuccessHelper(result);
+        _ingredientRepositoryMock.Verify(r => r.DeleteIngredient(addedIngredient.ID), Times.Once());
     }
+
     #endregion
 }

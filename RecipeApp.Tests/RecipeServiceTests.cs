@@ -5,10 +5,12 @@ using RecipeApp.Application.DTOs.RecipeDTO;
 using RecipeApp.Application.DTOs.RecipeIngredientDTO;
 using RecipeApp.Application.Helpers;
 using RecipeApp.Application.Interfaces;
+using RecipeApp.Application.Interfaces.RecipeInterfaces;
+using RecipeApp.Application.RecipeServices;
 using RecipeApp.Application.Services;
+
 using RecipeApp.Domain.Entities;
 using RecipeApp.Domain.Enums;
-using RecipeApp.Infrastructure;
 using RecipeApp.Infrastructure.Repositories;
 
 namespace RecipeApp.Tests;
@@ -16,34 +18,41 @@ namespace RecipeApp.Tests;
 public class RecipeServiceTests
 {
     private readonly IRecipeService _recipeService;
+
+    private readonly Mock<IRecipeRepository> _recipeRepositoryMock;
+
     private readonly IIngredientService _ingredientService;
     private readonly IRecipeIngredientService _recipeIngredientService;
     private readonly IFixture _fixture;
-    private readonly Mock<IRecipeRepository> _recipeRepositoryMock;
     private readonly IRecipeRepository _recipeRepository;
     private readonly Mock<IIngredientRepository> _ingredientRepositoryMock;
     private readonly IIngredientRepository _ingredientRepository;
 
-    private readonly ApplicationDbContext _dbContext;
 
     public RecipeServiceTests()
     {
-        _recipeRepositoryMock = new Mock<IRecipeRepository>();
-        _recipeRepository = _recipeRepositoryMock.Object;
-        _ingredientRepositoryMock = new Mock<IIngredientRepository>();
-        _ingredientRepository = _ingredientRepositoryMock.Object;
-
+        #region Fixture config
         _fixture = new Fixture();
         _fixture.Behaviors
             .OfType<ThrowingRecursionBehavior>()
             .ToList()
             .ForEach(b => _fixture.Behaviors.Remove(b));
-
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+        #endregion
 
-        _recipeService = new RecipeService(_recipeRepository);
-        _ingredientService = new IngredientService(_ingredientRepository);
-        _recipeIngredientService = new RecipeIngredientService(_recipeRepository, _ingredientRepository, _ingredientService);
+
+        _recipeRepositoryMock = new Mock<IRecipeRepository>();
+        _ingredientRepositoryMock = new Mock<IIngredientRepository>();
+
+        _recipeService = new RecipeService
+            (
+                new RecipeCommandService(_recipeRepositoryMock.Object),
+                new RecipeDeleteService(_recipeRepositoryMock.Object),
+                new RecipeFilterService(_recipeRepositoryMock.Object),
+                new RecipeQueryService(_recipeRepositoryMock.Object)
+            );
+        _ingredientService = new IngredientService(_ingredientRepositoryMock.Object);
+        _recipeIngredientService = new RecipeIngredientService(_recipeRepositoryMock.Object, _ingredientRepositoryMock.Object, _ingredientService);
     }
 
     private static void AssertSuccessHelper<T>(Result<T> result)

@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RecipeApp.Application.Interfaces;
+using RecipeApp.Application.Interfaces.RecipeInterfaces;
+using RecipeApp.Application.RecipeServices;
 using RecipeApp.Application.Services;
 using RecipeApp.Infrastructure;
 using RecipeApp.Infrastructure.Repositories;
@@ -25,6 +27,11 @@ namespace RecipeApp.API
             });
 
             builder.Services.AddScoped<IRecipeService, RecipeService>();
+            builder.Services.AddScoped<IRecipeCommandService, RecipeCommandService>();
+            builder.Services.AddScoped<IRecipeDeleteService, RecipeDeleteService>();
+            builder.Services.AddScoped<IRecipeFilterService, RecipeFilterService>();
+            builder.Services.AddScoped<IRecipeQueryService, RecipeQueryService>();
+
             builder.Services.AddScoped<IIngredientService, IngredientService>();
             builder.Services.AddScoped<IRecipeIngredientService, RecipeIngredientService>();
 

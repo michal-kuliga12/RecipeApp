@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Application.Services;
@@ -16,10 +15,10 @@ namespace RecipeApp.API
             // Add services to the container.
 
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
 
             builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
+            builder.Services.AddScoped<IIngredientRepository, IngredientRepository>();
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));

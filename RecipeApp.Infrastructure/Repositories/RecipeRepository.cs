@@ -1,11 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using RecipeApp.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RecipeApp.Infrastructure.Repositories
 {
@@ -37,16 +32,17 @@ namespace RecipeApp.Infrastructure.Repositories
             return true;
         }
 
-        public async Task<List<Recipe>?> GetAllRecipes()
+        public async Task<List<Recipe>> GetAllRecipes()
         {
             return await _dbContext.Recipes.ToListAsync();
         }
 
-        public async Task<List<Recipe>?> GetFilteredRecipes(Expression<Func<Recipe, bool>> predicate)
+        public async Task<List<Recipe>> GetFilteredRecipes(Expression<Func<Recipe, bool>> predicate)
         {
-            return await _dbContext.Recipes
-                .Where(predicate)
-                .ToListAsync();
+            if (predicate is null)
+                return await _dbContext.Recipes.ToListAsync();
+
+            return await _dbContext.Recipes.Where(predicate).ToListAsync();
         }
 
         public async Task<Recipe?> GetRecipeByID(Guid recipeID)
@@ -74,6 +70,20 @@ namespace RecipeApp.Infrastructure.Repositories
 
             int countUpdated = await _dbContext.SaveChangesAsync();
             return recipe;
+        }
+
+        public async Task<Recipe?> InsertRecipeIngredient(RecipeIngredient recipeIngredient)
+        {
+            _dbContext.RecipeIngredients.Add(recipeIngredient);
+            await _dbContext.SaveChangesAsync();
+
+            Recipe? updatedRecipe = await _dbContext.Recipes
+                .AsNoTracking()
+                .Include(r => r.RecipeIngredients)
+                    .ThenInclude(ri => ri.Ingredient)
+                .FirstOrDefaultAsync(r => r.ID == recipeIngredient.RecipeID);
+
+            return updatedRecipe;
         }
     }
 }

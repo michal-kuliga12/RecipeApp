@@ -9,11 +9,11 @@ public class RecipeIngredient
     [Key]
     public Guid ID { get; set; }
 
-    [NotEmptyGuid(ErrorMessage = "ID nie może być puste")]
+    [NotEmptyGuid(ErrorMessage = "IngredientID nie może być puste")]
     public Guid IngredientID { get; set; }
     public Ingredient Ingredient { get; set; }
 
-    [NotEmptyGuid(ErrorMessage = "ID nie może być puste")]
+    [NotEmptyGuid(ErrorMessage = "RecipeID nie może być puste")]
     public Guid RecipeID { get; set; }
     public Recipe Recipe { get; set; }
     [Range(0.1, 10000, ErrorMessage = "Ilość musi być większa niż 0 i mniejsza niż 10 000")]

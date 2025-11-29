@@ -1,10 +1,5 @@
-﻿using RecipeApp.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
+using RecipeApp.Domain.Entities;
 
 namespace RecipeApp.Infrastructure.Repositories
 {
@@ -12,9 +7,10 @@ namespace RecipeApp.Infrastructure.Repositories
     {
         Task<Recipe> AddRecipe(Recipe recipe);
         Task<Recipe?> GetRecipeByID(Guid recipeID);
-        Task<List<Recipe>?> GetAllRecipes();
-        Task<List<Recipe>?> GetFilteredRecipes(Expression<Func<Recipe,bool>> predicate);
+        Task<List<Recipe>> GetAllRecipes();
+        Task<List<Recipe>> GetFilteredRecipes(Expression<Func<Recipe, bool>> predicate);
         Task<Recipe> UpdateRecipe(Recipe recipe);
         Task<bool> DeleteRecipe(Guid recipeID);
+        Task<Recipe?> InsertRecipeIngredient(RecipeIngredient recipeIngredient);
     }
 }

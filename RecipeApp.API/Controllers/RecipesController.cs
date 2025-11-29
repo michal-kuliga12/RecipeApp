@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using RecipeApp.Application.DTOs.RecipeDTO;
 using RecipeApp.Application.Interfaces;
-using RecipeApp.Domain.Entities;
 using RecipeApp.Infrastructure;
 
 namespace RecipeApp.API.Controllers;
@@ -19,11 +17,14 @@ public class RecipesController : ControllerBase
         _recipeService = recipeService;
     }
 
+    // DO POPRAWIENIA 
+    /* 
+
     // GET: api/Recipes
     [HttpGet]
     public async Task<ActionResult<IEnumerable<RecipeResponse?>>> GetRecipes()
     {
-        return await _recipeService.GetAllRecipes();
+        //return await _recipeService.GetAllRecipes();
     }
 
     // GET: api/Recipes/5
@@ -101,4 +102,5 @@ public class RecipesController : ControllerBase
 
         return NoContent();
     }
+    */
 }

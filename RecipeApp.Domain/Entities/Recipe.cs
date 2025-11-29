@@ -22,7 +22,7 @@ public class Recipe
     [Range(1, 1440)]
     public int PreparationTime { get; set; }
     [Required(ErrorMessage = "Przepis musi zawierać co najmniej jeden składnik")]
-    public List<RecipeIngredient>? RecipeIngredients { get; set; } = new();
+    public List<RecipeIngredient> RecipeIngredients { get; set; } = new();
     [Range(1, 20, ErrorMessage = "Liczba porcji musi być w zakresie od 1 do 20")]
     public int Servings { get; set; }
     [Range(0.0, 5.0, ErrorMessage = "Ocena musi być w zakresie od 0 do 5")]

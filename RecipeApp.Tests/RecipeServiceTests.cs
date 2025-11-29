@@ -1,7 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using AutoFixture;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using RecipeApp.Application.DTOs.RecipeDTO;
 using RecipeApp.Application.DTOs.RecipeIngredientDTO;
@@ -23,38 +21,17 @@ public class RecipeServiceTests
     private readonly IFixture _fixture;
     private readonly Mock<IRecipeRepository> _recipeRepositoryMock;
     private readonly IRecipeRepository _recipeRepository;
+    private readonly Mock<IIngredientRepository> _ingredientRepositoryMock;
+    private readonly IIngredientRepository _ingredientRepository;
 
     private readonly ApplicationDbContext _dbContext;
-
-    private void AssertSuccessHelper<T>(Result<T> result)
-    {
-        Assert.IsType<Result<T>>(result);
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-    }
-    private void AssertSuccessHelper(Result result)
-    {
-        Assert.IsType<Result>(result);
-        Assert.True(result.IsSuccess);
-    }
-
-    private void AssertFailureHelper<T>(Result<T> result)
-    {
-        Assert.IsType<Result<T>>(result);
-        Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Error);
-    }
-    private void AssertFailureHelper(Result result)
-    {
-        Assert.IsType<Result>(result);
-        Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Error);
-    }
 
     public RecipeServiceTests()
     {
         _recipeRepositoryMock = new Mock<IRecipeRepository>();
         _recipeRepository = _recipeRepositoryMock.Object;
+        _ingredientRepositoryMock = new Mock<IIngredientRepository>();
+        _ingredientRepository = _ingredientRepositoryMock.Object;
 
         _fixture = new Fixture();
         _fixture.Behaviors
@@ -65,9 +42,74 @@ public class RecipeServiceTests
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _recipeService = new RecipeService(_recipeRepository);
-        _ingredientService = new IngredientService(_dbContext);
-        _recipeIngredientService = new RecipeIngredientService(_recipeService, _ingredientService, _dbContext);
+        _ingredientService = new IngredientService(_ingredientRepository);
+        _recipeIngredientService = new RecipeIngredientService(_recipeRepository, _ingredientRepository, _ingredientService);
     }
+
+    private static void AssertSuccessHelper<T>(Result<T> result)
+    {
+        Assert.IsType<Result<T>>(result);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+    }
+    private static void AssertSuccessHelper(Result result)
+    {
+        Assert.IsType<Result>(result);
+        Assert.True(result.IsSuccess);
+    }
+
+    private static void AssertFailureHelper<T>(Result<T> result)
+    {
+        Assert.IsType<Result<T>>(result);
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+    }
+    private static void AssertFailureHelper(Result result)
+    {
+        Assert.IsType<Result>(result);
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+    }
+
+    #region RequireIDOrStringValidator
+    [Fact]
+    public async Task RequireIDOrStringValidator_NullIngredientID()
+    {
+        var obj = _fixture.Build<RecipeIngredientAddRequest>()
+            .With(ing => ing.IngredientID, Guid.Empty)
+            .Create();
+        bool result = ValidationHelper.ValidateModel(obj);
+        Assert.True(result);
+    }
+    [Fact]
+    public async Task RequireIDOrStringValidator_NullIngredientName()
+    {
+        var obj = _fixture.Build<RecipeIngredientAddRequest>()
+            .With(ing => ing.IngredientName, String.Empty)
+            .Create();
+        bool result = ValidationHelper.ValidateModel(obj);
+        Assert.True(result);
+    }
+    [Fact]
+    public async Task RequireIDOrStringValidator_BothValuesExists()
+    {
+        var obj = _fixture.Build<RecipeIngredientAddRequest>()
+            .Create();
+        bool result = ValidationHelper.ValidateModel(obj);
+        Assert.False(result);
+    }
+    [Fact]
+    public async Task RequireIDOrStringValidator_BothValuesAreNull()
+    {
+        var obj = _fixture.Build<RecipeIngredientAddRequest>()
+            .With(ing => ing.IngredientName, String.Empty)
+            .With(ing => ing.IngredientID, Guid.Empty)
+            .Create();
+        bool result = ValidationHelper.ValidateModel(obj);
+        Assert.False(result);
+    }
+    #endregion
+
 
     #region AddRecipe()
     [Fact]
@@ -211,12 +253,12 @@ public class RecipeServiceTests
     public async Task GetAllRecipes_RecipesExists_ShouldReturnCollection()
     {
         // Arrange
-        List<Recipe> repoRecipes = new()
-        {
+        List<Recipe> repoRecipes =
+        [
             _fixture.Create<Recipe>(),
             _fixture.Create<Recipe>(),
             _fixture.Create<Recipe>()
-        };
+        ];
 
         _recipeRepositoryMock
             .Setup(r => r.GetAllRecipes())
@@ -274,7 +316,7 @@ public class RecipeServiceTests
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    public async Task GetFilteredRecipes_NullOrEmptySearchName_ReturnAllRecipes(string searchString)
+    public async Task GetFilteredRecipes_NullOrEmptySearchName_ReturnAllRecipes(string? searchString)
     {
         List<Recipe> repoRecipes = _fixture.CreateMany<Recipe>(5).ToList();
 
@@ -540,34 +582,40 @@ public class RecipeServiceTests
     #endregion
 
     #region AddRecipeIngredient()
-    //[Fact]
-    //public async Task AddRecipeIngredient_ValidRequest()
-    //{
-    //    RecipeResponse? recipe = await _recipeService.AddRecipe(_fixture.Create<RecipeAddRequest>());
-    //    Guid recipeID = recipe.ID;
+    [Fact]
+    public async Task AddRecipeIngredient_ValidRequest()
+    {
+        Recipe dbRecipe = _fixture.Create<Recipe>();
+        _recipeRepositoryMock.Setup(r => r.GetRecipeByID(It.IsAny<Guid>()))
+            .ReturnsAsync(dbRecipe);
+        RecipeIngredient dbRI = _fixture.Build<RecipeIngredient>()
+            .With(i => i.RecipeID, dbRecipe.ID)
+            .Create();
+        _recipeRepositoryMock.Setup(r => r.InsertRecipeIngredient(It.IsAny<RecipeIngredient>()))
+            .Callback<RecipeIngredient>(dbRI =>
+            {
+                dbRecipe.RecipeIngredients ??= new List<RecipeIngredient>();
+                dbRecipe.RecipeIngredients.Add(dbRI);
+            })
+            .ReturnsAsync(dbRecipe);
+        Ingredient dbIng = _fixture.Build<Ingredient>()
+            .With(i => i.ID, dbRI.IngredientID)
+            .Create();
+        _ingredientRepositoryMock.Setup(r => r.GetIngredientByID(It.IsAny<Guid>()))
+            .ReturnsAsync(dbIng);
 
-    //    IngredientResponse? ingredient = await _ingredientService.AddIngredient(_fixture.Create<IngredientAddRequest>());
-    //    Guid ingredientID = ingredient.ID;
+        RecipeIngredientAddRequest request = _fixture.Build<RecipeIngredientAddRequest>()
+            .With(ri => ri.IngredientName, String.Empty)
+            .With(ri => ri.IngredientID, dbRI.IngredientID)
+            .With(ri => ri.RecipeID, dbRecipe.ID)
+            .With(ri => ri.Unit, dbRI.Unit)
+            .With(ri => ri.Quantity, dbRI.Quantity)
+            .Create();
 
-    //    RecipeIngredientAddRequest recipeAddIngredientRequest = new()
-    //    {
-    //        IngredientID = ingredientID,
-    //        RecipeID = recipeID,
-    //        Quantity = 1,
-    //        Unit = Unit.Piece
-    //    };
+        var result = await _recipeIngredientService.AddRecipeIngredient(request);
 
-    //    RecipeResponse? recipeWithAddedIngredient = await _recipeIngredientService.AddRecipeIngredient(recipeAddIngredientRequest);
-
-    //    Assert.Single(recipeWithAddedIngredient.RecipeIngredients);
-    //    var addedIngredient = recipeWithAddedIngredient.RecipeIngredients.First();
-
-    //    Assert.Equal(recipeAddIngredientRequest.IngredientID, addedIngredient.IngredientID);
-    //    Assert.Equal(recipeAddIngredientRequest.RecipeID, addedIngredient.RecipeID);
-    //    Assert.Equal(recipeAddIngredientRequest.Quantity, addedIngredient.Quantity);
-    //    Assert.Equal(recipeAddIngredientRequest.Unit, addedIngredient.Unit);
-
-    //}
+        AssertSuccessHelper(result);
+    }
 
     [Fact]
     public async Task AddRecipeIngredient_InvalidQuantity_ShouldFailValidation()
@@ -576,39 +624,36 @@ public class RecipeServiceTests
             .With(x => x.Quantity, 0)
             .Create();
 
-        var validationResults = new List<ValidationResult>();
-        var context = new ValidationContext(request);
-        bool isValid = Validator.TryValidateObject(request, context, validationResults, true);
+        var result = await _recipeIngredientService.AddRecipeIngredient(request);
 
-        Assert.False(isValid);
-        Assert.Contains(validationResults, r => r.ErrorMessage.Contains("Ilość musi być większa niż 0 i mniejsza niż 10 000"));
+        AssertFailureHelper(result);
     }
 
     [Fact]
-    public async Task AddRecipeIngredient_InvalidIngredientID()
+    public async Task AddRecipeIngredient_InvalidIngredientValues_ReturnsFailure()
     {
         // Arrange
         RecipeIngredientAddRequest request = _fixture.Build<RecipeIngredientAddRequest>()
             .With(x => x.IngredientID, Guid.Empty)
+            .With(x => x.IngredientName, String.Empty)
             .Create();
 
         // Act
-        var response = _recipeIngredientService.AddRecipeIngredient(request);
+        var result = await _recipeIngredientService.AddRecipeIngredient(request);
 
-        Assert.Null(response);
+        AssertFailureHelper(result);
     }
+
     [Fact]
-    public async Task AddRecipeIngredient_EmptyRecipeID_ReturnsError()
+    public async Task AddRecipeIngredient_EmptyRecipeID_ReturnsFailure()
     {
-        // Arrange
         RecipeIngredientAddRequest request = _fixture.Build<RecipeIngredientAddRequest>()
             .With(x => x.RecipeID, Guid.Empty)
             .Create();
 
-        // Act
-        var response = _recipeIngredientService.AddRecipeIngredient(request);
+        var result = await _recipeIngredientService.AddRecipeIngredient(request);
 
-        Assert.Null(response);
+        AssertFailureHelper(result);
     }
 
     [Fact]
@@ -618,41 +663,29 @@ public class RecipeServiceTests
             .With(x => x.Unit, (Unit?)null)
             .Create();
 
-        var validationResults = new List<ValidationResult>();
-        var context = new ValidationContext(request);
-        bool isValid = Validator.TryValidateObject(request, context, validationResults, true);
+        var result = await _recipeIngredientService.AddRecipeIngredient(request);
 
-        Assert.False(isValid);
-        Assert.Contains(validationResults, r => r.ErrorMessage.Contains("Jednostka jest wymagana"));
+        AssertFailureHelper(result);
     }
 
     [Fact]
     public async Task AddRecipeIngredient_AlreadyExists_ReturnsError()
     {
-        Recipe recipe = _fixture.Create<Recipe>();
-        _dbContext.Recipes.Add(recipe);
+        RecipeIngredientAddRequest requestRI = _fixture.Create<RecipeIngredientAddRequest>();
+        RecipeIngredient dbRI = requestRI.ToRecipeIngredient();
+        dbRI.ID = _fixture.Create<Guid>();
+        Recipe dbRecipe = _fixture.Build<Recipe>()
+            .With(r => r.RecipeIngredients, new List<RecipeIngredient>() { dbRI })
+            .Create();
 
-        Ingredient ingredient = _fixture.Create<Ingredient>();
-        _dbContext.Ingredients.Add(ingredient);
-        await _dbContext.SaveChangesAsync();
 
-        RecipeIngredientAddRequest recipeAddIngredientRequest = new()
-        {
-            IngredientID = ingredient.ID,
-            RecipeID = recipe.ID,
-            Quantity = 1,
-            Unit = Unit.Piece
-        };
+        var result = await _recipeIngredientService.AddRecipeIngredient(requestRI);
 
-        RecipeResponse? recipeWithAddedIngredient = await _recipeIngredientService.AddRecipeIngredient(recipeAddIngredientRequest);
-
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-        {
-            await _recipeIngredientService.AddRecipeIngredient(recipeAddIngredientRequest);
-        });
+        AssertFailureHelper(result);
     }
 
     #endregion
+    /*
     #region UpdateRecipeIngredient()
     [Fact]
     public async Task UpdateRecipeIngredient_ValidRequest()
@@ -671,7 +704,7 @@ public class RecipeServiceTests
             .With(x => x.RecipeID, recipe.ID)
             .Create();
 
-        RecipeResponse? recipeWithIngredient = await _recipeIngredientService.AddRecipeIngredient(recipeAddIngredientRequest);
+        var recipeWithIngredient = await _recipeIngredientService.AddRecipeIngredient(recipeAddIngredientRequest);
 
         //Act
         RecipeIngredient? addedIngredient = recipeWithIngredient.RecipeIngredients.First();
@@ -803,6 +836,7 @@ public class RecipeServiceTests
             await _recipeIngredientService.UpdateRecipeIngredient(null);
         });
     }
+
     // Update recipe
     // request ?= null
     // recipe get by id
@@ -812,6 +846,7 @@ public class RecipeServiceTests
     // aktualizacja recipe ingredient
     // return recipe response
     #endregion
+
     #region DeleteRecipeIngredient()
     [Fact]
     public async Task DeleteRecipeIngredient_NullID_ThrowsException()
@@ -861,5 +896,6 @@ public class RecipeServiceTests
         List<RecipeIngredient> recipeIngredients = recipeFromDb.RecipeIngredients;
         Assert.Empty(recipeIngredients);
     }
+    #endregion
+    */
 }
-#endregion

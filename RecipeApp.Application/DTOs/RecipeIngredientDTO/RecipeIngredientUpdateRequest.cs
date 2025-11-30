@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using RecipeApp.Domain.Enums;
-using RecipeApp.Domain.Validation;
+using RecipeApp.Domain.Entities.Enums;
+using RecipeApp.Domain.Entities.Validation;
 
 namespace RecipeApp.Application.DTOs.RecipeIngredientDTO;
 

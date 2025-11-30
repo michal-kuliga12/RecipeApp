@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
-namespace RecipeApp.Domain.Validation
+namespace RecipeApp.Domain.Entities.Validation
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class RequireIDorString : ValidationAttribute
@@ -13,7 +13,7 @@ namespace RecipeApp.Domain.Validation
         {
             _idPropertyName = idPropertyName;
             _referencePropertyName = referencePropertyName;
-            this.ErrorMessage = "Należy podać jedną z wartości: {0} lub {1}";
+            ErrorMessage = "Należy podać jedną z wartości: {0} lub {1}";
         }
         public override string FormatErrorMessage(string name)
         {
@@ -34,8 +34,8 @@ namespace RecipeApp.Domain.Validation
             object? idValue = idPropertyInfo.GetValue(instance);
             object? referenceValue = referencePropertyInfo.GetValue(instance);
 
-            bool idIsPresent = idValue is Guid idGuid && (idGuid != Guid.Empty);
-            bool referenceIsPresent = referenceValue is String refString && !String.IsNullOrWhiteSpace(refString);
+            bool idIsPresent = idValue is Guid idGuid && idGuid != Guid.Empty;
+            bool referenceIsPresent = referenceValue is string refString && !string.IsNullOrWhiteSpace(refString);
 
             if (idIsPresent ^ referenceIsPresent)
             {

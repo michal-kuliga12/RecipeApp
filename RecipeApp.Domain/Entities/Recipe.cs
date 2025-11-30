@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using RecipeApp.Domain.Enums;
+using RecipeApp.Domain.Entities.Enums;
 
 namespace RecipeApp.Domain.Entities;
 

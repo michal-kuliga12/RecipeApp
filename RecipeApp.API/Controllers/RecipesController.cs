@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using RecipeApp.Application.Interfaces;
 using RecipeApp.Infrastructure;
 
 namespace RecipeApp.API.Controllers;
@@ -9,12 +8,10 @@ namespace RecipeApp.API.Controllers;
 public class RecipesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-    private readonly IRecipeService _recipeService;
 
-    public RecipesController(ApplicationDbContext context, IRecipeService recipeService)
+    public RecipesController(ApplicationDbContext context)
     {
         _context = context;
-        _recipeService = recipeService;
     }
 
     // DO POPRAWIENIA 

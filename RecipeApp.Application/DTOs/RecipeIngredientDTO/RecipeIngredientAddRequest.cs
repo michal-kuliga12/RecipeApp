@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using RecipeApp.Domain.Entities;
-using RecipeApp.Domain.Enums;
-using RecipeApp.Domain.Validation;
+using RecipeApp.Domain.Entities.Enums;
+using RecipeApp.Domain.Entities.Validation;
 
 namespace RecipeApp.Application.DTOs.RecipeIngredientDTO;
 
@@ -25,7 +25,7 @@ public class RecipeIngredientAddRequest
             IngredientID = IngredientID,
             RecipeID = RecipeID,
             Quantity = Quantity ?? 1,
-            Unit = Unit ?? Domain.Enums.Unit.Gram
+            Unit = Unit ?? Domain.Entities.Enums.Unit.Gram
         };
     }
 

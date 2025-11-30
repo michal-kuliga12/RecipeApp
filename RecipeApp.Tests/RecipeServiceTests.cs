@@ -10,8 +10,8 @@ using RecipeApp.Application.RecipeServices;
 using RecipeApp.Application.Services;
 
 using RecipeApp.Domain.Entities;
-using RecipeApp.Domain.Enums;
-using RecipeApp.Infrastructure.Repositories;
+using RecipeApp.Domain.Entities.Enums;
+using RecipeApp.Domain.RepositoriesContracts;
 
 namespace RecipeApp.Tests;
 

@@ -3,7 +3,7 @@ using RecipeApp.Application.DTOs.IngredientDTO;
 using RecipeApp.Application.Helpers;
 using RecipeApp.Application.Interfaces;
 using RecipeApp.Domain.Entities;
-using RecipeApp.Infrastructure.Repositories;
+using RecipeApp.Domain.RepositoriesContracts;
 
 namespace RecipeApp.Application.Services
 {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace RecipeApp.Domain.Enums;
+namespace RecipeApp.Domain.Entities.Enums;
 
 public enum Category
 {

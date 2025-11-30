@@ -19,24 +19,24 @@ public class RecipeService : IRecipeService
         _queryService = queryService;
     }
 
-    public Task<Result<RecipeResponse>> AddRecipe(RecipeAddRequest? recipeAddRequest)
-        => _commandService.AddRecipe(recipeAddRequest);
+    public async Task<Result<RecipeResponse>> AddRecipe(RecipeAddRequest? recipeAddRequest)
+        => await _commandService.AddRecipe(recipeAddRequest);
 
-    public Task<Result> DeleteRecipe(Guid? recipeID)
-        => _deleteService.DeleteRecipe(recipeID);
+    public async Task<Result> DeleteRecipe(Guid? recipeID)
+        => await _deleteService.DeleteRecipe(recipeID);
 
-    public Task<Result<List<RecipeResponse>>> GetAllRecipes()
-        => _queryService.GetAllRecipes();
+    public async Task<Result<List<RecipeResponse>>> GetAllRecipes()
+        => await _queryService.GetAllRecipes();
 
-    public Task<Result<List<RecipeResponse>>> GetFilteredRecipes(string seachBy, string? seachString)
-        => _filterService.GetFilteredRecipes(seachBy, seachString);
+    public async Task<Result<List<RecipeResponse>>> GetFilteredRecipes(string seachBy, string? seachString)
+        => await _filterService.GetFilteredRecipes(seachBy, seachString);
 
-    public Task<Result<RecipeResponse>> GetRecipeByID(Guid? recipeID)
-        => _queryService.GetRecipeByID(recipeID);
+    public async Task<Result<RecipeResponse>> GetRecipeByID(Guid? recipeID)
+        => await _queryService.GetRecipeByID(recipeID);
 
-    public Task<Result<List<RecipeResponse>>> GetSortedRecipes(List<RecipeResponse?> recipeList, string sortBy, bool ascending = true)
-        => _filterService.GetSortedRecipes(recipeList, sortBy, ascending);
+    public async Task<Result<List<RecipeResponse>>> GetSortedRecipes(List<RecipeResponse?> recipeList, string sortBy, bool ascending = true)
+        => await _filterService.GetSortedRecipes(recipeList, sortBy, ascending);
 
-    public Task<Result<RecipeResponse>> UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest)
-        => _commandService.UpdateRecipe(recipeUpdateRequest);
+    public async Task<Result<RecipeResponse>> UpdateRecipe(RecipeUpdateRequest recipeUpdateRequest)
+        => await _commandService.UpdateRecipe(recipeUpdateRequest);
 }

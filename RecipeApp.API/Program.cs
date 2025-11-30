@@ -3,6 +3,7 @@ using RecipeApp.Application.Interfaces;
 using RecipeApp.Application.Interfaces.RecipeInterfaces;
 using RecipeApp.Application.RecipeServices;
 using RecipeApp.Application.Services;
+using RecipeApp.Domain.RepositoriesContracts;
 using RecipeApp.Infrastructure;
 using RecipeApp.Infrastructure.Repositories;
 

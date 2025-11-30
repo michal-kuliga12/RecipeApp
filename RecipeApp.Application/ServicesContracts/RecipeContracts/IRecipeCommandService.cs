@@ -1,7 +1,7 @@
-﻿using RecipeApp.Application.DTOs.RecipeDTO;
-using RecipeApp.Application.Helpers;
+﻿using RecipeApp.Core.DTOs.RecipeDTO;
+using RecipeApp.Core.Helpers;
 
-namespace RecipeApp.Application.Interfaces.RecipeInterfaces;
+namespace RecipeApp.Core.ServicesContracts.RecipeContracts;
 
 public interface IRecipeCommandService
 {

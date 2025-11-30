@@ -1,17 +1,16 @@
 ﻿using System.Linq.Expressions;
 using AutoFixture;
 using Moq;
-using RecipeApp.Application.DTOs.RecipeDTO;
-using RecipeApp.Application.DTOs.RecipeIngredientDTO;
-using RecipeApp.Application.Helpers;
-using RecipeApp.Application.Interfaces;
-using RecipeApp.Application.Interfaces.RecipeInterfaces;
-using RecipeApp.Application.RecipeServices;
-using RecipeApp.Application.Services;
-
-using RecipeApp.Domain.Entities;
-using RecipeApp.Domain.Entities.Enums;
-using RecipeApp.Domain.RepositoriesContracts;
+using RecipeApp.Core.Domain.Entities;
+using RecipeApp.Core.Domain.Enums;
+using RecipeApp.Core.Domain.RepositoriesContracts;
+using RecipeApp.Core.DTOs.RecipeDTO;
+using RecipeApp.Core.DTOs.RecipeIngredientDTO;
+using RecipeApp.Core.Helpers;
+using RecipeApp.Core.Services;
+using RecipeApp.Core.Services.RecipeServices;
+using RecipeApp.Core.ServicesContracts;
+using RecipeApp.Core.ServicesContracts.RecipeContracts;
 
 namespace RecipeApp.Tests;
 

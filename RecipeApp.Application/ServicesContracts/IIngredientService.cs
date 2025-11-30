@@ -1,7 +1,7 @@
-﻿using RecipeApp.Application.DTOs.IngredientDTO;
-using RecipeApp.Application.Helpers;
+﻿using RecipeApp.Core.DTOs.IngredientDTO;
+using RecipeApp.Core.Helpers;
 
-namespace RecipeApp.Application.Interfaces;
+namespace RecipeApp.Core.ServicesContracts;
 
 public interface IIngredientService
 {

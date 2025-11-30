@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
-namespace RecipeApp.Domain.Entities.Validation
+namespace RecipeApp.Core.Domain.Validation
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class RequireIDorString : ValidationAttribute

@@ -5,13 +5,15 @@ VisualStudioVersion = 17.14.36327.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeApp.API", "RecipeApp.API\RecipeApp.API.csproj", "{EE733C17-EC70-8273-48BD-D520837A0966}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeApp.Application", "RecipeApp.Application\RecipeApp.Application.csproj", "{2A8BFBD5-0DA0-C930-441A-0D1835750DD4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeApp.Domain", "RecipeApp.Domain\RecipeApp.Domain.csproj", "{6C905533-663B-E19B-2703-0E767F3E5471}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeApp.Core", "RecipeApp.Application\RecipeApp.Core.csproj", "{2A8BFBD5-0DA0-C930-441A-0D1835750DD4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeApp.Tests", "RecipeApp.Tests\RecipeApp.Tests.csproj", "{B26E3608-9D38-3AB2-370A-21B869184B0D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeApp.Infrastructure", "RecipeApp.Infrastructure\RecipeApp.Infrastructure.csproj", "{BDE0ACA8-D98C-F564-62EC-8E2696471482}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{041DBD3D-B7A9-471C-8F6A-EF27CDAEAD7E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,10 +29,6 @@ Global
 		{2A8BFBD5-0DA0-C930-441A-0D1835750DD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A8BFBD5-0DA0-C930-441A-0D1835750DD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A8BFBD5-0DA0-C930-441A-0D1835750DD4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6C905533-663B-E19B-2703-0E767F3E5471}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6C905533-663B-E19B-2703-0E767F3E5471}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6C905533-663B-E19B-2703-0E767F3E5471}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6C905533-663B-E19B-2703-0E767F3E5471}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B26E3608-9D38-3AB2-370A-21B869184B0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B26E3608-9D38-3AB2-370A-21B869184B0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B26E3608-9D38-3AB2-370A-21B869184B0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -42,6 +40,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EE733C17-EC70-8273-48BD-D520837A0966} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{2A8BFBD5-0DA0-C930-441A-0D1835750DD4} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{B26E3608-9D38-3AB2-370A-21B869184B0D} = {041DBD3D-B7A9-471C-8F6A-EF27CDAEAD7E}
+		{BDE0ACA8-D98C-F564-62EC-8E2696471482} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5C96D2DA-1D53-4476-80D3-748940488979}

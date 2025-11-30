@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using RecipeApp.Domain.Entities;
-using RecipeApp.Domain.RepositoriesContracts;
+using RecipeApp.Core.Domain.Entities;
+using RecipeApp.Core.Domain.RepositoriesContracts;
 
 namespace RecipeApp.Infrastructure.Repositories
 {

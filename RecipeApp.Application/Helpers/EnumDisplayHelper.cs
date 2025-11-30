@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace RecipeApp.Application.Helpers;
+namespace RecipeApp.Core.Helpers;
 
 public static class EnumDisplayHelper
 {

@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using RecipeApp.Domain.Entities;
-using RecipeApp.Domain.Entities.Enums;
-using RecipeApp.Domain.Entities.Validation;
+using RecipeApp.Core.Domain.Entities;
+using RecipeApp.Core.Domain.Enums;
+using RecipeApp.Core.Domain.Validation;
 
-namespace RecipeApp.Application.DTOs.RecipeDTO;
+namespace RecipeApp.Core.DTOs.RecipeDTO;
 
 public class RecipeUpdateRequest
 {

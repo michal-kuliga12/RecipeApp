@@ -1,4 +1,4 @@
-﻿namespace RecipeApp.Application.Interfaces.RecipeInterfaces;
+﻿namespace RecipeApp.Core.ServicesContracts.RecipeContracts;
 
 public interface IRecipeService :
     IRecipeCommandService,

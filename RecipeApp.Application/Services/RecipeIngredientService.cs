@@ -1,12 +1,12 @@
-﻿using RecipeApp.Application.DTOs.IngredientDTO;
-using RecipeApp.Application.DTOs.RecipeDTO;
-using RecipeApp.Application.DTOs.RecipeIngredientDTO;
-using RecipeApp.Application.Helpers;
-using RecipeApp.Application.Interfaces;
-using RecipeApp.Domain.Entities;
-using RecipeApp.Domain.RepositoriesContracts;
+﻿using RecipeApp.Core.Domain.Entities;
+using RecipeApp.Core.Domain.RepositoriesContracts;
+using RecipeApp.Core.DTOs.IngredientDTO;
+using RecipeApp.Core.DTOs.RecipeDTO;
+using RecipeApp.Core.DTOs.RecipeIngredientDTO;
+using RecipeApp.Core.Helpers;
+using RecipeApp.Core.ServicesContracts;
 
-namespace RecipeApp.Application.Services;
+namespace RecipeApp.Core.Services;
 
 public class RecipeIngredientService : IRecipeIngredientService
 {

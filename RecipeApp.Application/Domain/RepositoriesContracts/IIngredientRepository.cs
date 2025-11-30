@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
-using RecipeApp.Domain.Entities;
+using RecipeApp.Core.Domain.Entities;
 
-namespace RecipeApp.Domain.RepositoriesContracts
+namespace RecipeApp.Core.Domain.RepositoriesContracts
 
 {
     public interface IIngredientRepository

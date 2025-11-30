@@ -1,9 +1,8 @@
-﻿using RecipeApp.Application.DTOs.RecipeDTO;
-using RecipeApp.Application.DTOs.RecipeIngredientDTO;
-using RecipeApp.Application.Helpers;
+﻿using RecipeApp.Core.DTOs.RecipeDTO;
+using RecipeApp.Core.DTOs.RecipeIngredientDTO;
+using RecipeApp.Core.Helpers;
 
-namespace RecipeApp.Application.Interfaces;
-
+namespace RecipeApp.Core.ServicesContracts;
 public interface IRecipeIngredientService
 {
     Task<Result<RecipeResponse>> AddRecipeIngredient(RecipeIngredientAddRequest recipeIngredientAddRequest);

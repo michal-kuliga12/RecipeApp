@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace RecipeApp.Application.DTOs.IngredientDTO;
+namespace RecipeApp.Core.DTOs.IngredientDTO;
 
 public class IngredientUpdateRequest
 {

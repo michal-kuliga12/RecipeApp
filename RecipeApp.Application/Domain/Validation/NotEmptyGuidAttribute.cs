@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace RecipeApp.Domain.Entities.Validation;
+namespace RecipeApp.Core.Domain.Validation;
 
 public class NotEmptyGuidAttribute : ValidationAttribute
 {

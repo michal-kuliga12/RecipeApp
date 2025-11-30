@@ -1,12 +1,12 @@
 ﻿using System.Linq.Expressions;
 using AutoFixture;
 using Moq;
-using RecipeApp.Application.DTOs.IngredientDTO;
-using RecipeApp.Application.Helpers;
-using RecipeApp.Application.Interfaces;
-using RecipeApp.Application.Services;
-using RecipeApp.Domain.Entities;
-using RecipeApp.Domain.RepositoriesContracts;
+using RecipeApp.Core.Domain.Entities;
+using RecipeApp.Core.Domain.RepositoriesContracts;
+using RecipeApp.Core.DTOs.IngredientDTO;
+using RecipeApp.Core.Helpers;
+using RecipeApp.Core.Services;
+using RecipeApp.Core.ServicesContracts;
 
 namespace RecipeApp.Tests;
 

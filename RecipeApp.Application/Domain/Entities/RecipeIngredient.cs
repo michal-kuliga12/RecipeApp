@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using RecipeApp.Domain.Entities.Enums;
-using RecipeApp.Domain.Entities.Validation;
+using RecipeApp.Core.Domain.Enums;
+using RecipeApp.Core.Domain.Validation;
 
-namespace RecipeApp.Domain.Entities;
+namespace RecipeApp.Core.Domain.Entities;
 
 public class RecipeIngredient
 {

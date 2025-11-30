@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using RecipeApp.Domain.Entities;
+using RecipeApp.Core.Domain.Entities;
 
-namespace RecipeApp.Application.DTOs.IngredientDTO;
+namespace RecipeApp.Core.DTOs.IngredientDTO;
 
 public class IngredientAddRequest
 {

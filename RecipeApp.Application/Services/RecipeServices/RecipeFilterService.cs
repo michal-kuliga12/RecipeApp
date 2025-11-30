@@ -1,11 +1,11 @@
 ﻿using System.Linq.Expressions;
-using RecipeApp.Application.DTOs.RecipeDTO;
-using RecipeApp.Application.Helpers;
-using RecipeApp.Application.Interfaces.RecipeInterfaces;
-using RecipeApp.Domain.Entities;
-using RecipeApp.Domain.RepositoriesContracts;
+using RecipeApp.Core.Domain.Entities;
+using RecipeApp.Core.Domain.RepositoriesContracts;
+using RecipeApp.Core.DTOs.RecipeDTO;
+using RecipeApp.Core.Helpers;
+using RecipeApp.Core.ServicesContracts.RecipeContracts;
 
-namespace RecipeApp.Application.RecipeServices;
+namespace RecipeApp.Core.Services.RecipeServices;
 
 public class RecipeFilterService : IRecipeFilterService
 {

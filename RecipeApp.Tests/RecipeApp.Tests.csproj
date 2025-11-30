@@ -31,7 +31,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RecipeApp.API\RecipeApp.API.csproj" />
-    <ProjectReference Include="..\RecipeApp.Application\RecipeApp.Application.csproj" />
+    <ProjectReference Include="..\RecipeApp.Application\RecipeApp.Core.csproj" />
+    <ProjectReference Include="..\RecipeApp.Infrastructure\RecipeApp.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

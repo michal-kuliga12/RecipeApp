@@ -1,7 +1,7 @@
-﻿using RecipeApp.Domain.Entities;
-using RecipeApp.Domain.Entities.Enums;
+﻿using RecipeApp.Core.Domain.Entities;
+using RecipeApp.Core.Domain.Enums;
 
-namespace RecipeApp.Application.DTOs.RecipeDTO;
+namespace RecipeApp.Core.DTOs.RecipeDTO;
 
 public class RecipeResponse
 {

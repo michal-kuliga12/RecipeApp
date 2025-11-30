@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using RecipeApp.Domain.Entities;
-using RecipeApp.Domain.Entities.Enums;
-using RecipeApp.Domain.Entities.Validation;
+using RecipeApp.Core.Domain.Entities;
+using RecipeApp.Core.Domain.Enums;
+using RecipeApp.Core.Domain.Validation;
 
-namespace RecipeApp.Application.DTOs.RecipeIngredientDTO;
+namespace RecipeApp.Core.DTOs.RecipeIngredientDTO;
 
 [RequireIDorString("IngredientID", "IngredientName")]
 public class RecipeIngredientAddRequest
@@ -25,7 +25,7 @@ public class RecipeIngredientAddRequest
             IngredientID = IngredientID,
             RecipeID = RecipeID,
             Quantity = Quantity ?? 1,
-            Unit = Unit ?? Domain.Entities.Enums.Unit.Gram
+            Unit = Unit ?? Domain.Enums.Unit.Gram
         };
     }
 

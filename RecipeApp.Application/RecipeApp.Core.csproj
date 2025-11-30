@@ -11,8 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RecipeApp.Domain\RecipeApp.Domain.csproj" />
-    <ProjectReference Include="..\RecipeApp.Infrastructure\RecipeApp.Infrastructure.csproj" />
+
   </ItemGroup>
 
 </Project>
